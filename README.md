@@ -17,12 +17,6 @@ be cloned.) However every subsequent build should be normal.
 In one shell, run `cargo run --release` (release is not strictly necessary of
 course.)
 
-In the other shell, first alias `abci-cli`. You can do this as follows
-
-```
-alias abci-cli="$GOPATH/bin/abci-cli"
-```
-
 Run `abci-cli console` to more easily run `abci` commands.
 
 1. Run `deliver_tx "foo=bar"` to insert the key value pair `("foo", "bar")`
