@@ -4,17 +4,17 @@ use std::pin::Pin;
 
 use bytes::Bytes;
 
-use clap::arg;
-use clap::Parser;
+use sha2::Digest;
+use sha2::Sha256;
 
+use cometbft::validator::Update;
+use cometbft::PublicKey;
 use tower::Service;
 use tower_abci::BoxError;
 
 use cometbft::abci::v1::request::Request;
 use cometbft::abci::v1::response;
 use cometbft::abci::v1::response::Response;
-use cometbft::abci::Event;
-use cometbft::abci::EventAttributeIndexExt;
 
 use cometbft::abci::v1::response::ExtendVote;
 use cometbft::abci::v1::response::FinalizeBlock;
@@ -23,87 +23,95 @@ use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
 #[derive(Default)]
-pub struct KVStore {
+pub struct State {
     store: HashMap<String, String>,
-
-    // this is the height of the current block. Obviously this is just a key value store, so we're
-    // not *really* storing blocks, but we need this parameter because comet needs it.
     height: u32,
+    size: u32,
+}
 
-    // TODO: I'm not really sure what this field is for, to be honest. Comet needs it for whatever
-    // reason. Info on this would be nice.
-    app_hash: [u8; 8],
+impl State {
+    fn hash(&self) -> Vec<u8> {
+        let hasher = Sha256::new();
+
+        let bytes: Vec<u8> = self
+            .store
+            .iter()
+            .flat_map(|(k, v)| k.bytes().chain(v.bytes()))
+            .collect();
+
+        let hasher = hasher
+            .chain_update(bytes.as_slice()) // add the store
+            .chain_update(self.height.to_ne_bytes()) // add the height
+            .chain_update(self.size.to_ne_bytes()); // add the size
+
+        hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
+    }
+}
+
+// according to cometbft, this is the first 20 bytes of `SHA256(public_key)`
+pub type Addr = [u8; 20];
+
+#[derive(Default)]
+pub struct Application {
+    /// The state of our application
+    state: State,
+
+    /// The number of blocks to retain after a commit.
+    retain_blocks: i32,
+
+    /// The list of staged transactions.
+    staged_txs: Vec<Bytes>,
+
+    /// We keep track of a list of updates for our validators.
+    validator_upds: Vec<Update>,
+
+    /// A set of validators, mapping addresses to public keys.
+    validators: HashMap<Addr, PublicKey>,
+
+    /// If true, the app will generate block events in BeginBlock. Used to test the event indexer
+    /// Should be false by default to avoid generating too much data.
+    gen_block_events: bool,
 }
 
 // These are the functions that our KVStore struct implements.
-impl KVStore {
+impl Application {
+    // Info returns information about the state of the application. This is generally used
+    // everytime a CometBFT instance begins and let's the application know what CometBFT
+    // versions it's interacting with. Based from this information, CometBFT will ensure it is in
+    // sync with the application by potentially replaying the blocks it has. If the Application
+    // returns a 0 appBlockHeight, CometBFT will call InitChain to initialize the application
+    // with consensus related data
     fn info(&self) -> response::Info {
+        // CometBFT expects the application to persist validators. On startup, we need to load them
+        // if they exist.
+        // TODO
+
         response::Info {
             data: String::from("498c-kvstore-example-data"),
             version: String::from("0.1.0"),
             app_version: 1,
-            last_block_height: self.height.into(),
-            last_block_app_hash: self.app_hash.to_vec().try_into().unwrap(),
+            last_block_height: self.state.height.into(),
+            last_block_app_hash: self.state.hash().try_into().unwrap(),
         }
     }
 
     fn query(&self, query: Bytes) -> response::Query {
-        let key = String::from_utf8(query.to_vec()).unwrap(); // TODO: no `unwrap`s in production!!
-
-        let (value, log) = match self.store.get(&key) {
-            Some(value) => (value.clone(), "value exists"), // NOTE: `clone` is cheap here
-            None => (String::new(), "value does not exist"),
-        };
-
-        response::Query {
-            log: log.to_string(),
-            key: query,
-            value: value.into_bytes().into(),
-            ..Default::default()
-        }
+        todo!()
     }
 
     fn deliver_tx(&mut self, tx: Bytes) -> response::DeliverTx {
-        let tx = String::from_utf8(tx.to_vec()).unwrap(); // TODO: no `unwrap`s in production!!
-
-        let [key, value]: [&str; 2] = tx
-            .split('=')
-            .collect::<Vec<_>>()
-            .try_into()
-            .expect("was not of the form key value!"); // TODO: no panic in production!!
-
-        self.store.insert(key.to_string(), value.to_string());
-
-        response::DeliverTx {
-            events: vec![Event::new(
-                "app",
-                vec![
-                    ("key", key).index(),
-                    ("index_key", "index is working").index(),
-                    ("noindex_key", "index is working").no_index(),
-                ],
-            )],
-            ..Default::default()
-        }
+        todo!()
     }
 
     fn commit(&mut self) -> response::Commit {
-        let retain_height = self.height.into();
-
-        self.app_hash = (self.store.len() as u64).to_be_bytes();
-        self.height += 1;
-
-        response::Commit {
-            data: self.app_hash.to_vec().into(),
-            retain_height,
-        }
+        todo!()
     }
 }
 
 // Recall that `tower` is about creating `Service`s. Here what we are doing is turning our
 // `KVStore` struct into a `tower` service. This then allows us to compose it with the rest of the
 // `tower` ecosystem, which we do later in `main()`.
-impl Service<Request> for KVStore {
+impl Service<Request> for Application {
     type Response = Response;
 
     type Error = BoxError;
@@ -121,7 +129,7 @@ impl Service<Request> for KVStore {
         println!("got {:?}", req);
 
         let res = match req {
-            Request::Info(_) => Response::Info(Default::default()),
+            Request::Info(_) => Response::Info(self.info()),
             Request::Query(_) => Response::Query(Default::default()),
             Request::Commit => Response::Commit(Default::default()),
             Request::Echo(_) => Response::Echo(Default::default()),
@@ -132,7 +140,9 @@ impl Service<Request> for KVStore {
             Request::OfferSnapshot(_) => Response::ListSnapshots(Default::default()),
             Request::LoadSnapshotChunk(_) => Response::LoadSnapshotChunk(Default::default()),
             Request::ApplySnapshotChunk(_) => Response::ApplySnapshotChunk(Default::default()),
-            Request::PrepareProposal(proposal) => Response::PrepareProposal(PrepareProposal { txs: proposal.txs }),
+            Request::PrepareProposal(proposal) => {
+                Response::PrepareProposal(PrepareProposal { txs: proposal.txs })
+            }
             Request::ProcessProposal(_) => Response::ProcessProposal(ProcessProposal::Accept),
             Request::ExtendVote(_) => Response::ExtendVote(ExtendVote {
                 vote_extension: Bytes::new(),

@@ -817,6 +817,7 @@ dependencies = [
  "bytes",
  "clap",
  "cometbft",
+ "sha2 0.10.8",
  "tokio",
  "tower",
  "tower-abci",
