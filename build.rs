@@ -10,7 +10,7 @@ fn main() {
     let path: PathBuf = [DEPS_DIR, "cometbft"].iter().collect();
 
     if path.exists() {
-        return // nothing to do - already installed
+        return; // nothing to do - already installed
     }
 
     // git clone the repo
@@ -22,7 +22,7 @@ fn main() {
     if !res.status.success() {
         panic!("failed to clone cometbft repo")
     }
-    
+
     // make sure we're on the right branch
     let res = Command::new("git")
         .current_dir(&path)
