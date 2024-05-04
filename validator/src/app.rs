@@ -1,11 +1,11 @@
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
 use bytes::Bytes;
 
-use sha2::Digest;
-use sha2::Sha256;
+use rand::Rng;
 
 use cometbft::validator::Update;
 use cometbft::PublicKey;
@@ -22,29 +22,70 @@ use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
+use crate::types::Tx;
+use crate::types::TxHash;
+use crate::types::TxRequest;
+
 #[derive(Default)]
 pub struct State {
-    store: HashMap<String, String>,
+    /// a list of transactions. You might think that this should be a MerkleTree, but in fact
+    /// ArkWorks' MerkleTree size is fixed at runtime, so we actually just store the txs in a
+    /// list, and build the tree for each new tx. This sucks but idk how else to do it.
+    txs: Vec<Tx>,
+
+    /// We check in this set to see if a tx is already spent
+    spents: BTreeSet<u64>,
+
     height: u32,
     size: u32,
 }
 
+pub enum TxError {
+    AlreadySpent
+}
+
 impl State {
     fn hash(&self) -> Vec<u8> {
-        let hasher = Sha256::new();
+        todo!()
 
-        let bytes: Vec<u8> = self
-            .store
-            .iter()
-            .flat_map(|(k, v)| k.bytes().chain(v.bytes()))
-            .collect();
+        // let hasher = Sha256::new();
+        //
+        // let bytes: Vec<u8> = self
+        //     .store
+        //     .iter()
+        //     .flat_map(|(k, v)| k.bytes().chain(v.bytes()))
+        //     .collect();
+        //
+        // let hasher = hasher
+        //     .chain_update(bytes.as_slice()) // add the store
+        //     .chain_update(self.height.to_ne_bytes()) // add the height
+        //     .chain_update(self.size.to_ne_bytes()); // add the size
+        //
+        // hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
+    }
 
-        let hasher = hasher
-            .chain_update(bytes.as_slice()) // add the store
-            .chain_update(self.height.to_ne_bytes()) // add the height
-            .chain_update(self.size.to_ne_bytes()); // add the size
+    /// Add a tx to the state. Checks that the tx is not already spent.
+    pub fn add_tx(&mut self, tx: TxRequest) -> Result<(), TxError> {
+        // generate a random serial_number
+        let mut rng = rand::thread_rng();
+        let serial_number: TxHash = rng.gen();
 
-        hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
+        // verify that the tx is not already spent
+        if self.spents.contains(&tx.prev_tx) {
+            return Err(TxError::AlreadySpent)
+        }
+
+        self.spents.insert(tx.prev_tx);
+
+        let tx = Tx {
+            prev_tx: tx.prev_tx,
+            to: tx.to,
+            serial_number,
+        };
+
+        self.txs.push(tx);
+
+        Ok(())
     }
 }
 
@@ -87,7 +128,7 @@ impl Application {
         // TODO
 
         response::Info {
-            data: String::from("498c-kvstore-example-data"),
+            data: String::from("498c-protocash"),
             version: String::from("0.1.0"),
             app_version: 1,
             last_block_height: self.state.height.into(),
@@ -126,7 +167,7 @@ impl Service<Request> for Application {
     }
 
     fn call(&mut self, req: Request) -> Self::Future {
-        println!("got {:?}", req);
+        // println!("got {:?}", req);
 
         let res = match req {
             Request::Info(_) => Response::Info(self.info()),

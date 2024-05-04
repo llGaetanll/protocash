@@ -5,9 +5,10 @@ use tower::ServiceBuilder;
 use tower_abci::v037::split;
 use tower_abci::v037::Server;
 
-mod kvstore;
+mod app;
+mod types;
 
-use kvstore::Application;
+use app::Application;
 
 /// A simple KVStore example on cometbft.
 #[derive(Parser, Debug)]
