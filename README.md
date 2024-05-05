@@ -60,12 +60,12 @@ When we make a transaction, we need to enforce two guarantees:
 1. We can afford to make this transaction.
 
     Because there are no denominations in our currency, this is equivalent to
-    proving that there is an unspent transaction that points to us. (i.e. to our
-    address.)
+    proving that there is a coin in the Merkle Tree which belongs to us.
+
 2. We are not double spending transactions.
 
-    If there is a transaction in the blockchain that points to us, we need to
-    ensure that we can only use it once.
+    If there is a coin in the tree that is ours, we need to ensure that we can
+    only use it once.
 
 #### The Process
 
