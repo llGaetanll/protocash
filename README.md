@@ -74,11 +74,11 @@ wants to make a payment to `B`.
 
 Then, `A` needs to prove that
 1. There exists a commitment `c` in the Merkle Tree which opens to
-  - `pk_A`, `A`'s public key.
-  - `pre_serial_no`
-  - `com_rnd`
-
-  This is the coin that `A` is spending.
+      - `pk_A`, `A`'s public key.
+      - `pre_serial_no`
+      - `com_rnd`
+   
+   This is the coin that `A` is spending.
 
 2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(sk_A)`, where `sk_A` is `A`'s secret key.
 
