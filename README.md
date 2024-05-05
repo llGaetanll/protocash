@@ -2,58 +2,59 @@
 
 ## How It Works
 
-Consider a simplified model of the application. In this model, we look at the
-state stored by the blockchain. There is one major simplification to our
-currency: that you can only send one coin per transactions. That is to say,
-there are no denominations of our currency, each and every transaction just
-sends a single coin. The reason for this simplification will be explained later.
+We consider a model with one key simplification: there are no denominations to
+the currency. In other words, any and all transactions just send one single
+coin.
 
 ### The Data
 
+This is the shape of the data stored by all validators on the blockchain.
+
 ```rs
-type TxID = u64; /// A transaction identifier, often called the `serial_number`.
-type Addr = u64; /// Some account address on the network.
+type CoinID = u64; /// A coin identifier, often called the `pre_serial_number`.
+type PubKey = u64; /// The public key of some user on the network.
 
 /// The state of our application
 struct State {
-    /// This `MerkleTree` stores the complete list of all transaction commitment
-    /// as its leaves.
-    transactions: MerkleTree<Commitment<Tx>>,
+    /// This `MerkleTree` stores coin commitments as its leaves.
+    coins: MerkleTree<Commitment<Coin>>,
 
     /// This is a set of all used `serial_number`s. This list is used to keep
-    /// track of spent transactions in order to avoid double spends.
-    spent_ids: HashSet<TxID>
+    /// track of spent coins in order to avoid double spends.
+    spent_ids: HashSet<CoinID>
 }
 
-/// A transaction.
-struct Tx {
-    /// The unique, random identifier of the transaction.
-    pub serial_number: TxID,
+/// A Coin
+struct Coin {
+    /// The public key of the owner of this coin.
+    key: PubKey,
 
-    /// Who the transaction is destined to.
-    addr: Addr,
+    /// The unique, random identifier of the coin.
+    pre_serial_number: CoinID,
 
-    /// Noise used when generating the commitment to the transaction.
-    // nonce: u64
+    /// Noise used when generating the coin commitment
+    com_rnd: u64
 }
 
-/// A transaction commitment. This is the data that our MerkleTree actually
-/// stores. This is really just a hash of the transaction which takes as input
-///     - The `serial_number`
-///     - The `addr`
-///     - The `nonce`, for randomness
-struct Commitment<Tx> {
+/// A coin commitment. This is the data that our MerkleTree actually
+/// stores. This is really just a hash of the coin which takes as input
+///     - The `key`
+///     - The `pre_serial_number`
+///     - The `com_rnd`, for randomness
+struct Commitment<T> {
     /// This is really the only important piece of data stored by the
     /// commitment.
     pub hash: u64,
 
     /// This is just to keep track of what this is a commitment to. In this
-    /// case, just a transaction.
-    _tx: PhantomData<Tx>
+    /// case, just a coin.
+    _tx: PhantomData<T>
 }
 ```
 
 ### Making a transaction
+
+#### Guarantees
 
 When we make a transaction, we need to enforce two guarantees:
 1. We can afford to make this transaction.
@@ -66,57 +67,61 @@ When we make a transaction, we need to enforce two guarantees:
     If there is a transaction in the blockchain that points to us, we need to
     ensure that we can only use it once.
 
-The way that we enforce these guarantees is by making a zero knowledge
-proof that there is a leaf in the MerkleTree which is a transaction that points
-to us.
+#### The Process
 
-#### The Proof
+The process by which we make a transaction is the following. Suppose that `A`
+wants to make a payment to `B`.
 
-The proof has public and private inputs:
+Then, `A` needs to prove that
+1. There exists a commitment `c` in the Merkle Tree which opens to
+  - `pk_A`
+  - `pre_serial_no`
+  - `com_rnd`
 
-**public inputs**:
+  This is the coin that `A` spending.
 
-- `root`: The root of the `MerkleTree`.
-- `serial_number`: the unique identifier of the transaction that points to us.
+2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(pk_A)`
 
-**private inputs**:
+   Notice here that only `A` can make this proof because only `A` knows `pk_A`.
 
-- `path`: The path of siblings down to our leaf of the MerkleTree.
+If `A` can make this proof, a new commitment `c' = H(pk_B, pre_serial_no', com_rnd')` is created, where
+- `pre_serial_no' = H(pre_serial_no)`
+- `cmd_rnd'` is random.
 
----
+NOTE: For this to work, only `B` should be able to prove the existence of this
+commitment, which means that only `B` should know `com_rnd'`, and `B` should
+know either `pre_serial_no'` or `pre_serial_no`.
 
-The merkle tree stores coins, not transactions
+##### Inputs to the Proof
 
-```rs
-type TxID = u64; /// A transaction identifier, often called the `serial_number`.
-type Addr = u64; /// Some account address on the network.
+Public inputs are:
+- `r`: The Merkle Tree root
+- `c`: The coin commitment paying the receiver
+- `s`: The serial number
 
-/// The state of our application
-struct State {
-    transactions: MerkleTree<Commitment<Coin>>,
-    spent_ids: HashSet<TxID>
-}
+##### Questions
 
-struct Coin {
-    /// A unique identifier for the coin
-    pub serial_number: TxID,
+This section contains questions about parts of this process which are still
+unclear (at least to me.)
 
-    /// A random value used as noise when generating the commitment to the coin.
-    nonce: u64
-}
+- Who adds commitments to the Merkle Tree? When are they added?
 
-/// A coin commitment. This is the data that our MerkleTree actually
-/// stores. This is really just a hash of the coin which takes as input
-///     - The `serial_number`
-///     - The `nonce`
-struct Commitment<T> {
-    /// This is really the only important piece of data stored by the
-    /// commitment.
-    pub hash: u64,
-    _tx: PhantomData<T>
-}
-```
+  Presumably, the new commitment is added by `A` during the transaction process.
 
-### Making a Transaction
+- Where is `sn` stored? I understand that the Merkle Tree stores commitments
+  which contain only 3 fields: some public key `pk`, a `pre_serial_no`, some 
+  `com_rnd`. So is `sn` *not* stored in the commitments? If not, where else?
 
-- prove that you have a coin by revealing a nonce
+- What does it mean for `sn` to *equal* `prf(sk_X, pre_serial_no)`? What is
+  `prf` computing about its inputs here?
+
+- If this new commitment `c'` is added by `A` for `B` to open and use, that
+  means that `B` needs to know both `com_rnd'`, and either `pre_serial_no'` or
+  `pre_serial_no`. But `A` chose `com_rnd'`, so somehow, `A` needs to convey
+  that information to `B`. Of course `A` *could* make that information public,
+  in which case *anyone* could open this commitment. Is this the intended
+  approach?
+
+- As user `B` awaiting a transaction from `A`, how do I know which commitment
+  `c'` in the Merkle Tree is the one that `B` left for me to open and use? The
+  data stored in the Merkle Tree is completely opaque to me.
