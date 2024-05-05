@@ -84,8 +84,8 @@ Then, `A` needs to prove that
 
    Notice here that only `A` can make this proof because only `A` knows `sk_A`.
 
-If `A` can make this proof, a new commitment `c' = H(pk_B, pre_serial_no', com_rnd')` is created, where
-- `pre_serial_no' = H(pre_serial_no)`
+If `A` can make this proof, `B` adds a new commitment `c' = H(pk_B, pre_serial_no', com_rnd')` to the Merkle Tree, where
+- `pre_serial_no' = H(sn)`
 - `cmd_rnd'` is random.
 
 ##### Inputs to the Proof
