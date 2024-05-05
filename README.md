@@ -80,13 +80,27 @@ Then, `A` needs to prove that
    
    This is the coin that `A` is spending.
 
-2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(sk_A)`, where `sk_A` is `A`'s secret key.
+2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(sk_A)`, where
+   `sk_A` is `A`'s secret key, and `prf` is just some pseudo-random function
+   which, in this case, is just a hash function.
 
-   Notice here that only `A` can make this proof because only `A` knows `sk_A`.
+   At this point, there are a few things to note
+   - Notice here that only `A` can make this proof because only `A` knows `sk_A`.
+   - It's also important to note that `sn` is *not* stored in the commitment here.
+     In fact, `sn` is not stored anywhere, it is just used in the proof that `A`
+     provides when making a transaction.
 
-If `A` can make this proof, `B` adds a new commitment `c' = H(pk_B, pre_serial_no', com_rnd')` to the Merkle Tree, where
+If `A` can make this proof, a new commitment `c' = H(pk_B, pre_serial_no',
+com_rnd')` is added by the validators, to the Merkle Tree, where
 - `pre_serial_no' = H(sn)`
 - `cmd_rnd'` is random.
+
+Both `pre_serial_no'` and `cmr_rnd'` are yielded back to `A`. Then, `A` is
+reponsible for messaging both `cmd_rnd'` and `pre_serial_no'` privately to `B`,
+in order for `B` to use this transaction.
+
+In order for `B` to find this coin in the Merkle Tree, they can simply compute
+the commitment from the information sent over by `A`.
 
 ##### Inputs to the Proof
 
@@ -94,30 +108,3 @@ Public inputs are:
 - `r`: The Merkle Tree root
 - `c`: The coin commitment paying the receiver
 - `s`: The serial number
-
-##### Questions
-
-This section contains questions about parts of this process which are still
-unclear (at least to me.)
-
-- Who adds commitments to the Merkle Tree? When are they added?
-
-  Presumably, the new commitment is added by `A` during the transaction process.
-
-- Where is `sn` stored? I understand that the Merkle Tree stores commitments
-  which contain only 3 fields: some public key `pk`, a `pre_serial_no`, some 
-  `com_rnd`. So is `sn` *not* stored in the commitments? If not, where else?
-
-- What does it mean for `sn` to *equal* `prf(sk_X, pre_serial_no)`? What is
-  `prf` computing about its inputs here?
-
-- If this new commitment `c'` is added by `A` for `B` to open and use, that
-  means that `B` needs to know both `com_rnd'`, and either `pre_serial_no'` or
-  `pre_serial_no`. But `A` chose `com_rnd'`, so somehow, `A` needs to convey
-  that information to `B`. Of course `A` *could* make that information public,
-  in which case *anyone* could open this commitment. Is this the intended
-  approach?
-
-- As user `B` awaiting a transaction from `A`, how do I know which commitment
-  `c'` in the Merkle Tree is the one that `B` left for me to open and use? The
-  data stored in the Merkle Tree is completely opaque to me.
