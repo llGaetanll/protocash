@@ -72,7 +72,8 @@ When we make a transaction, we need to enforce two guarantees:
 The process by which we make a transaction is the following. Suppose that `A`
 wants to make a payment to `B`.
 
-Then, `A` needs to prove that
+Then, `A` needs to provide a zero knowledge proof that
+
 1. There exists a commitment `c` in the Merkle Tree which opens to
       - `pk_A`, `A`'s public key.
       - `pre_serial_no`
@@ -106,5 +107,5 @@ the commitment from the information sent over by `A`.
 
 Public inputs are:
 - `r`: The Merkle Tree root
-- `c`: The coin commitment paying the receiver
+- `c`: The coin commitment owned by `A`
 - `s`: The serial number
