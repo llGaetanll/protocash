@@ -34,7 +34,7 @@ struct Tx {
     addr: Addr,
 
     /// Noise used when generating the commitment to the transaction.
-    nonce: u64
+    // nonce: u64
 }
 
 /// A transaction commitment. This is the data that our MerkleTree actually
@@ -70,4 +70,53 @@ The way that we enforce these guarantees is by making a zero knowledge
 proof that there is a leaf in the MerkleTree which is a transaction that points
 to us.
 
-TODO: how to do this.
+#### The Proof
+
+The proof has public and private inputs:
+
+**public inputs**:
+
+- `root`: The root of the `MerkleTree`.
+- `serial_number`: the unique identifier of the transaction that points to us.
+
+**private inputs**:
+
+- `path`: The path of siblings down to our leaf of the MerkleTree.
+
+---
+
+The merkle tree stores coins, not transactions
+
+```rs
+type TxID = u64; /// A transaction identifier, often called the `serial_number`.
+type Addr = u64; /// Some account address on the network.
+
+/// The state of our application
+struct State {
+    transactions: MerkleTree<Commitment<Coin>>,
+    spent_ids: HashSet<TxID>
+}
+
+struct Coin {
+    /// A unique identifier for the coin
+    pub serial_number: TxID,
+
+    /// A random value used as noise when generating the commitment to the coin.
+    nonce: u64
+}
+
+/// A coin commitment. This is the data that our MerkleTree actually
+/// stores. This is really just a hash of the coin which takes as input
+///     - The `serial_number`
+///     - The `nonce`
+struct Commitment<T> {
+    /// This is really the only important piece of data stored by the
+    /// commitment.
+    pub hash: u64,
+    _tx: PhantomData<T>
+}
+```
+
+### Making a Transaction
+
+- prove that you have a coin by revealing a nonce
