@@ -74,23 +74,19 @@ wants to make a payment to `B`.
 
 Then, `A` needs to prove that
 1. There exists a commitment `c` in the Merkle Tree which opens to
-  - `pk_A`
+  - `pk_A`, `A`'s public key.
   - `pre_serial_no`
   - `com_rnd`
 
-  This is the coin that `A` spending.
+  This is the coin that `A` is spending.
 
-2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(pk_A)`
+2. The serial number `sn = prf(sk_A, pre_serial_no)` AND `pk_A = H(sk_A)`, where `sk_A` is `A`'s secret key.
 
-   Notice here that only `A` can make this proof because only `A` knows `pk_A`.
+   Notice here that only `A` can make this proof because only `A` knows `sk_A`.
 
 If `A` can make this proof, a new commitment `c' = H(pk_B, pre_serial_no', com_rnd')` is created, where
 - `pre_serial_no' = H(pre_serial_no)`
 - `cmd_rnd'` is random.
-
-NOTE: For this to work, only `B` should be able to prove the existence of this
-commitment, which means that only `B` should know `com_rnd'`, and `B` should
-know either `pre_serial_no'` or `pre_serial_no`.
 
 ##### Inputs to the Proof
 
