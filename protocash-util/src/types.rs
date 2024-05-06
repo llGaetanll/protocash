@@ -1,25 +1,31 @@
-use std::{hash::{DefaultHasher, Hasher}, marker::PhantomData};
+use std::{
+    hash::{DefaultHasher, Hasher},
+    marker::PhantomData,
+};
 
-mod arkworks;
+/// A coin identifier, often called the `pre_serial_number`.
+pub type CoinID = u64;
 
-pub type CoinID = u64; /// A coin identifier, often called the `pre_serial_number`.
-pub type PubKey = u64; /// The public key of some user on the network.
+/// A type used to represent public/private keys of some user on the network.
+pub type Key = u64;
 
+/// A Coin. This is used in the MerkleTree as a `Coin` commitment.
 pub struct Coin {
     /// The public key of the owner of this coin.
-    pub key: PubKey,
+    pub pk: Key,
 
     /// The unique, random identifier of the coin.
     pub pre_serial_number: CoinID,
 
     /// Noise used when generating the coin commitment
-    pub com_rnd: u64
+    pub com_rnd: u64,
 }
 
+/// A commitment to some data `T`. Concretely, this is just a commitment to a [`Coin`].
 #[repr(transparent)]
 pub struct Commitment<T> {
     pub hash: u64,
-    _t: PhantomData<T>
+    _t: PhantomData<T>,
 }
 
 impl Commitment<Coin> {
@@ -27,7 +33,7 @@ impl Commitment<Coin> {
     pub fn from(coin: Coin) -> Self {
         Self {
             hash: Self::hash(coin),
-            _t: PhantomData
+            _t: PhantomData,
         }
     }
 
@@ -36,22 +42,13 @@ impl Commitment<Coin> {
     }
 
     fn hash(coin: Coin) -> u64 {
+        // TODO: maybe use a different hash function
         let mut hasher = DefaultHasher::new();
 
-        hasher.write(&coin.key.to_be_bytes());
+        hasher.write(&coin.pk.to_be_bytes());
         hasher.write(&coin.pre_serial_number.to_be_bytes());
         hasher.write(&coin.com_rnd.to_be_bytes());
 
         hasher.finish()
     }
-}
-
-type Proof = u64; // TODO
-
-pub struct TxRequest {
-    /// The address of the recipient of the transaction
-    to: PubKey,
-
-    /// A proof from the sender of the transaction
-    pf: Proof,
 }

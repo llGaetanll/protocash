@@ -1,5 +1,1 @@
-/validator/target
-/validator/deps
-/validator/abci-cli
-
-/client/target
+*/**/target

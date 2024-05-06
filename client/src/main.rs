@@ -1,18 +1,9 @@
-use std::error::Error;
-use std::thread;
-use std::time::Duration;
-
-use cometbft_proto::abci::v1::request::Value;
-use cometbft_proto::abci::v1::EchoRequest;
-use cometbft_proto::abci::v1::FlushRequest;
-use cometbft_proto::abci::v1::InfoRequest;
-use cometbft_proto::abci::v1::Request;
-
+use std::{time::Duration, thread, error::Error};
+use tokio::{io::AsyncWriteExt, net::TcpStream};
+use cometbft_proto::abci::v1::{request::Value, FlushRequest, InfoRequest, Request};
 use bytes::{BufMut, BytesMut};
-use tokio::io::AsyncWriteExt;
-use tokio::net::TcpStream;
-
 use prost::Message;
+use protocash_util::types::{Key, Commitment, Coin};
 
 async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<dyn Error>> {
     let mut buf = BytesMut::new();
@@ -27,6 +18,46 @@ async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<d
     stream.write_all(&dst).await?;
 
     Ok(())
+}
+
+struct Client {
+    /// The client's public key
+    pub pk: Key,
+
+    /// The client's secret key
+    sk: Key,
+
+    /// These are the client's commitments. These commitments should be in the MerkleTree
+    my_coins: Vec<Commitment<Coin>>,
+
+    /// These are *all* the transactions on the network. The client needs to know this - and in
+    /// fact, keep an up-to-date picture of this - in order to make the proof of payment to the
+    /// validator nodes.
+    all_coins: Vec<Commitment<Coin>>
+}
+
+impl Client {
+    pub fn new() -> Self {
+        todo!()
+    }
+
+    fn pay(&self, user: Key) {
+        // In order for `self` to pay `user`, `self` needs to know a few things.
+        //
+        // - The Merkle Tree of transactions
+        //
+        // - A list of `self`'s commitments, which sit in this Merkle Tree
+        //   Specifically here, the commitments need to live in the Merkle Tree and Client needs to
+        //   keep track of its commitments.
+        // 
+        // Once `self` knows these things, a zk proof needs to be made
+    }
+
+    /// Withdraw a transaction from the MerkleTree. Formally, when somebody makes a transaction to
+    /// us, they are responsible for sending us the `pre_serial_no` and the `com_rnd`. Once this is
+    /// done, the client can then hash this commitment into a leaf of the MerkleTree to verify its
+    /// existence. It is then added to `self.commitments` for `self` to use.
+    fn withdraw(&self) {}
 }
 
 #[tokio::main]
@@ -44,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // every request needs to be ended by a flush to see it on the server side
     let flush = Request {
-        value: Some(Value::Flush(FlushRequest {}))
+        value: Some(Value::Flush(FlushRequest {})),
     };
 
     write_request(&mut stream, req).await?;

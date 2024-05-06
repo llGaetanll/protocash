@@ -22,10 +22,9 @@ use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
-use crate::types::Coin;
-use crate::types::CoinID;
-use crate::types::Commitment;
-use crate::types::TxRequest;
+use protocash_util::types::Commitment;
+use protocash_util::types::Coin;
+use protocash_util::types::CoinID;
 
 #[derive(Default)]
 pub struct State {
@@ -65,7 +64,7 @@ impl State {
         // hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
     }
 
-    pub fn pay(&self, req: TxRequest) {
+    pub fn pay(&self) {
         // TODO: verify the proof here
     }
 }

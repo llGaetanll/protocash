@@ -1061,7 +1061,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "protocash"
+name = "protocash-node"
 version = "0.1.0"
 dependencies = [
  "ark-bls12-381",
@@ -1077,6 +1077,7 @@ dependencies = [
  "bytes",
  "clap",
  "cometbft",
+ "protocash-util",
  "rand",
  "sha2 0.10.8",
  "tokio",
@@ -1085,6 +1086,10 @@ dependencies = [
  "tracing",
  "tracing-subscriber 0.3.18",
 ]
+
+[[package]]
+name = "protocash-util"
+version = "0.1.0"
 
 [[package]]
 name = "quote"

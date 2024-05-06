@@ -1,5 +1,15 @@
 # Protocash
 
+## Project Structure
+
+In this repo you will find three crates.
+- `protocash-node`: A binary used by nodes on the network to validate
+   transactions.
+- `protocash-client`: A binary used by clients to transact to other clients.
+  The transactions are checked by nodes running `protocash-node`.
+- `protocash-util`: A library of shared utilities between `protocash-node` and
+  `protocash-client`.
+
 ## How It Works
 
 We consider a model with one key simplification: there are no denominations to

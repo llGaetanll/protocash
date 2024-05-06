@@ -102,19 +102,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "client"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "cometbft",
- "cometbft-proto",
- "prost",
- "tokio",
- "tower",
- "tower-abci",
-]
-
-[[package]]
 name = "cometbft"
 version = "0.1.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -700,6 +687,24 @@ checksum = "3235c33eb02c1f1e212abdbe34c78b264b038fb58ca612664343271e36e55ffe"
 dependencies = [
  "prost",
 ]
+
+[[package]]
+name = "protocash-client"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "cometbft",
+ "cometbft-proto",
+ "prost",
+ "protocash-util",
+ "tokio",
+ "tower",
+ "tower-abci",
+]
+
+[[package]]
+name = "protocash-util"
+version = "0.1.0"
 
 [[package]]
 name = "quote"
