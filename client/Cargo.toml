@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 tower = "0.4.13"
 tower-abci = { git = "https://github.com/llGaetanll/tower-abci", branch = "main" }
+cometbft-proto = "0.1.0-alpha.2"
 cometbft = "=0.1.0-alpha.2"
 bytes = "1.6.0"
 tokio = "1.37.0"

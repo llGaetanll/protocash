@@ -22,19 +22,20 @@ use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
-use crate::types::Tx;
-use crate::types::TxHash;
+use crate::types::Coin;
+use crate::types::CoinID;
+use crate::types::Commitment;
 use crate::types::TxRequest;
 
 #[derive(Default)]
 pub struct State {
-    /// a list of transactions. You might think that this should be a MerkleTree, but in fact
-    /// ArkWorks' MerkleTree size is fixed at runtime, so we actually just store the txs in a
-    /// list, and build the tree for each new tx. This sucks but idk how else to do it.
-    txs: Vec<Tx>,
+    /// a list of coins. You might think that this should be a MerkleTree, but in fact ArkWorks'
+    /// MerkleTree size is fixed at runtime, so we actually just store the coin commitments in a
+    /// list, and build the tree for each new commitment. This sucks but idk how else to do it.
+    txs: Vec<Commitment<Coin>>,
 
-    /// We check in this set to see if a tx is already spent
-    spents: BTreeSet<u64>,
+    /// We check in this set to see if a coin is already spent
+    spents: BTreeSet<CoinID>,
 
     height: u32,
     size: u32,
@@ -64,28 +65,8 @@ impl State {
         // hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
     }
 
-    /// Add a tx to the state. Checks that the tx is not already spent.
-    pub fn add_tx(&mut self, tx: TxRequest) -> Result<(), TxError> {
-        // generate a random serial_number
-        let mut rng = rand::thread_rng();
-        let serial_number: TxHash = rng.gen();
-
-        // verify that the tx is not already spent
-        if self.spents.contains(&tx.prev_tx) {
-            return Err(TxError::AlreadySpent)
-        }
-
-        self.spents.insert(tx.prev_tx);
-
-        let tx = Tx {
-            prev_tx: tx.prev_tx,
-            to: tx.to,
-            serial_number,
-        };
-
-        self.txs.push(tx);
-
-        Ok(())
+    pub fn pay(&self, req: TxRequest) {
+        // TODO: verify the proof here
     }
 }
 
@@ -167,10 +148,10 @@ impl Service<Request> for Application {
     }
 
     fn call(&mut self, req: Request) -> Self::Future {
-        // println!("got {:?}", req);
+        println!("got {:?}", req);
 
         let res = match req {
-            Request::Info(_) => Response::Info(self.info()),
+            Request::Info(_) => Response::Info(Default::default()),
             Request::Query(_) => Response::Query(Default::default()),
             Request::Commit => Response::Commit(Default::default()),
             Request::Echo(_) => Response::Echo(Default::default()),

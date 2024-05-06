@@ -2,8 +2,8 @@ use clap::arg;
 use clap::Parser;
 
 use tower::ServiceBuilder;
-use tower_abci::v037::split;
-use tower_abci::v037::Server;
+use tower_abci::split;
+use tower_abci::Server;
 
 mod app;
 mod types;
@@ -27,9 +27,9 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
-    // tracing_subscriber::fmt::Subscriber::builder()
-    //     .with_max_level(tracing::Level::TRACE)
-    //     .init();
+    tracing_subscriber::fmt::Subscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .init();
 
     let args = Args::parse();
     let service = Application::default();
