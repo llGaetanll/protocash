@@ -6,7 +6,6 @@ use tower_abci::split;
 use tower_abci::Server;
 
 mod app;
-mod types;
 
 use app::Application;
 

@@ -3,6 +3,8 @@ use std::{
     marker::PhantomData,
 };
 
+pub mod arkworks;
+
 /// A coin identifier, often called the `pre_serial_number`.
 pub type CoinID = u64;
 

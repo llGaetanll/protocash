@@ -3,7 +3,9 @@ use tokio::{io::AsyncWriteExt, net::TcpStream};
 use cometbft_proto::abci::v1::{request::Value, FlushRequest, InfoRequest, Request};
 use bytes::{BufMut, BytesMut};
 use prost::Message;
-use protocash_util::types::{Key, Commitment, Coin};
+use protocash_util::types::{arkworks::MerkleConfig, Coin, Commitment, Key};
+
+mod types;
 
 async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<dyn Error>> {
     let mut buf = BytesMut::new();
@@ -51,6 +53,8 @@ impl Client {
         //   keep track of its commitments.
         // 
         // Once `self` knows these things, a zk proof needs to be made
+
+
     }
 
     /// Withdraw a transaction from the MerkleTree. Formally, when somebody makes a transaction to
