@@ -16,8 +16,6 @@ ark-crypto-primitives = { version = "0.3.0", features = ["r1cs"] }
 ark-relations = { version = "^0.3.0", default-features = false }
 ark-r1cs-std = { version = "^0.3.0", default-features = false }
 ark-serialize = { version = "^0.3.0", default-features = false }
-arkworks-r1cs-gadgets = "0.5"
-arkworks-native-gadgets = "0.5"
 arkworks-utils = { version = "0.5", features = ["poseidon_bls381_x3_5"] }
 rand = "0.8.5"
 lazy_static = "1.4.0"

@@ -260,31 +260,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arkworks-native-gadgets"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f89b1d1b013428e6e4d3da7e6c93121a22afd9e5b13740517ac3eb7afdc4c5e6"
-dependencies = [
- "ark-crypto-primitives",
- "ark-ff",
- "ark-std",
-]
-
-[[package]]
-name = "arkworks-r1cs-gadgets"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33436eccb08bd5e857d67cd2901c9bc0f3d006309ed350e3f3d2649cd79e9647"
-dependencies = [
- "ark-crypto-primitives",
- "ark-ff",
- "ark-r1cs-std",
- "ark-relations",
- "ark-std",
- "arkworks-native-gadgets",
-]
-
-[[package]]
 name = "arkworks-utils"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1158,8 +1133,6 @@ dependencies = [
  "ark-serialize",
  "ark-snark",
  "ark-std",
- "arkworks-native-gadgets",
- "arkworks-r1cs-gadgets",
  "arkworks-utils",
  "lazy_static",
  "rand",

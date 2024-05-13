@@ -1,11 +1,10 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{CommitmentGadget, Error as ArkError};
+use ark_crypto_primitives::{CommitmentGadget, CommitmentScheme, Error as ArkError};
 use ark_ff::{to_bytes, ToConstraintField};
 use ark_r1cs_std::{
     fields::fp::FpVar, uint8::UInt8, R1CSVar, ToBytesGadget, ToConstraintFieldGadget,
 };
 use ark_relations::r1cs::SynthesisError;
-use arkworks_native_gadgets::prelude::ark_crypto_primitives::CommitmentScheme;
 use rand::Rng;
 
 use crate::util::UnitVar;

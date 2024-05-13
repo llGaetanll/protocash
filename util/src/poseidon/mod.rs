@@ -2,12 +2,10 @@ use ark_bls12_381::Fr as BlsFr;
 use ark_ff::PrimeField;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use arkworks_native_gadgets::poseidon::{
-    sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters,
-};
-use arkworks_r1cs_gadgets::poseidon::{FieldHasherGadget, PoseidonGadget};
 use arkworks_utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve};
 use lazy_static::lazy_static;
+
+use self::{native_gadgets::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters}, r1cs_gadgets::{FieldHasherGadget, PoseidonGadget}};
 
 // from: https://github.com/rozbb/zkcreds-rs/blob/main/src/poseidon_utils.rs
 
@@ -74,5 +72,7 @@ fn poseidon_iterated_hash_gadget(
     Ok(running_hash)
 }
 
+mod native_gadgets;
+mod r1cs_gadgets;
 pub mod commitment;
 pub mod crh;
