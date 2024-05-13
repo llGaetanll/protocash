@@ -22,8 +22,7 @@ use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
-use protocash_util::types::Commitment;
-use protocash_util::types::Coin;
+use protocash_util::types::CoinCommitment;
 use protocash_util::types::CoinID;
 
 #[derive(Default)]
@@ -31,7 +30,7 @@ pub struct State {
     /// a list of coins. You might think that this should be a MerkleTree, but in fact ArkWorks'
     /// MerkleTree size is fixed at runtime, so we actually just store the coin commitments in a
     /// list, and build the tree for each new commitment. This sucks but idk how else to do it.
-    txs: Vec<Commitment<Coin>>,
+    txs: Vec<CoinCommitment>,
 
     /// We check in this set to see if a coin is already spent
     spents: BTreeSet<CoinID>,
@@ -41,7 +40,7 @@ pub struct State {
 }
 
 pub enum TxError {
-    AlreadySpent
+    AlreadySpent,
 }
 
 impl State {

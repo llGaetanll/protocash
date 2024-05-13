@@ -1,11 +1,10 @@
-use std::{time::Duration, thread, error::Error};
-use tokio::{io::AsyncWriteExt, net::TcpStream};
-use cometbft_proto::abci::v1::{request::Value, FlushRequest, InfoRequest, Request};
 use bytes::{BufMut, BytesMut};
+use cometbft_proto::abci::v1::{request::Value, FlushRequest, InfoRequest, Request};
 use prost::Message;
-use protocash_util::types::{arkworks::MerkleConfig, Coin, Commitment, Key};
+use std::{error::Error, thread, time::Duration};
+use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-mod types;
+use protocash_util::types::{CoinCommitment, Key};
 
 async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<dyn Error>> {
     let mut buf = BytesMut::new();
@@ -30,12 +29,12 @@ struct Client {
     sk: Key,
 
     /// These are the client's commitments. These commitments should be in the MerkleTree
-    my_coins: Vec<Commitment<Coin>>,
+    my_coins: Vec<CoinCommitment>,
 
     /// These are *all* the transactions on the network. The client needs to know this - and in
     /// fact, keep an up-to-date picture of this - in order to make the proof of payment to the
     /// validator nodes.
-    all_coins: Vec<Commitment<Coin>>
+    all_coins: Vec<CoinCommitment>,
 }
 
 impl Client {
@@ -51,10 +50,8 @@ impl Client {
         // - A list of `self`'s commitments, which sit in this Merkle Tree
         //   Specifically here, the commitments need to live in the Merkle Tree and Client needs to
         //   keep track of its commitments.
-        // 
+        //
         // Once `self` knows these things, a zk proof needs to be made
-
-
     }
 
     /// Withdraw a transaction from the MerkleTree. Formally, when somebody makes a transaction to
