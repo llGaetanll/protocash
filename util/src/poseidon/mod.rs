@@ -1,27 +1,13 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{crh::CRH, CRHGadget, CommitmentGadget, Error as ArkError};
-use ark_ff::{to_bytes, PrimeField, ToConstraintField};
-use ark_r1cs_std::{
-    alloc::{AllocVar, AllocationMode},
-    fields::fp::FpVar,
-    uint8::UInt8,
-    R1CSVar, ToBytesGadget, ToConstraintFieldGadget,
-};
-use ark_relations::r1cs::{ConstraintSystemRef, Namespace, SynthesisError};
-use arkworks_native_gadgets::{
-    poseidon::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters},
-    prelude::ark_crypto_primitives::CommitmentScheme,
+use ark_ff::PrimeField;
+use ark_r1cs_std::fields::fp::FpVar;
+use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
+use arkworks_native_gadgets::poseidon::{
+    sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters,
 };
 use arkworks_r1cs_gadgets::poseidon::{FieldHasherGadget, PoseidonGadget};
 use arkworks_utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve};
 use lazy_static::lazy_static;
-use rand::Rng;
-use std::{borrow::Borrow, marker::PhantomData};
-
-// TODO: Once arkworks-native-gadgets updates to the new Arkworks version, update this to use the
-// new Arkworks trait TwoToOneCRHScheme
-// https://github.com/webb-tools/arkworks-gadgets/blob/master/arkworks-native-gadgets/src/mimc.rs#L2=
-use ark_crypto_primitives::crh::{TwoToOneCRH, TwoToOneCRHGadget};
 
 // from: https://github.com/rozbb/zkcreds-rs/blob/main/src/poseidon_utils.rs
 
