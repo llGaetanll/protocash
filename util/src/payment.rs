@@ -5,8 +5,8 @@ use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_relations::r1cs::{ConstraintSystemRef, Result};
 
 use crate::merkletree::{Root, RootVar, TreePath, TreePathVar};
-use crate::poseidon::UnitVar;
 use crate::types::{Coin, CoinCommitment, CoinCommitmentVar, CoinID, Key};
+use crate::util::UnitVar;
 
 pub struct PaymentProof {
     // Public Inputs
