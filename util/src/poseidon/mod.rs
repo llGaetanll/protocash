@@ -4,12 +4,25 @@ use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use lazy_static::lazy_static;
 
-use self::{native_gadgets::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters}, r1cs_gadgets::{FieldHasherGadget, PoseidonGadget}, utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve}};
+use self::{
+    native_gadgets::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters},
+    r1cs_gadgets::{FieldHasherGadget, PoseidonGadget},
+    utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve},
+};
 
 // from: https://github.com/rozbb/zkcreds-rs/blob/main/src/poseidon_utils.rs
 
+/// A commitment scheme defined using the Poseidon hash function over BLS12-381
+pub struct Bls12PoseidonCommitter;
+
+/// Represents the collision-resistant hashing functionality of Poseidon over BLS12-381
+pub struct Bls12PoseidonCrh;
+
+pub struct Bls12PoseidonDigestConverter;
+
 fn setup_poseidon_params<F: PrimeField>(curve: Curve, exp: i8, width: u8) -> PoseidonParameters<F> {
-    let pos_data = crate::poseidon::utils::poseidon_params::setup_poseidon_params(curve, exp, width).unwrap();
+    let pos_data =
+        crate::poseidon::utils::poseidon_params::setup_poseidon_params(curve, exp, width).unwrap();
 
     let mds_f = bytes_matrix_to_f(&pos_data.mds);
     let rounds_f = bytes_vec_to_f(&pos_data.rounds);
@@ -32,12 +45,6 @@ lazy_static! {
     static ref BLS12_POSEIDON_PARAMS: PoseidonParameters<BlsFr> =
         setup_poseidon_params(Curve::Bls381, 3, POSEIDON_WIDTH);
 }
-
-/// A commitment scheme defined using the Poseidon hash function over BLS12-381
-pub struct Bls12PoseidonCommitter;
-
-/// Represents the collision-resistant hashing functionality of Poseidon over BLS12-381
-pub struct Bls12PoseidonCrh;
 
 fn poseidon_iterated_hash(input: &[BlsFr]) -> BlsFr {
     let hasher = Poseidon::new(BLS12_POSEIDON_PARAMS.clone());
@@ -70,8 +77,8 @@ fn poseidon_iterated_hash_gadget(
     Ok(running_hash)
 }
 
+pub mod commitment;
+pub mod crh;
 mod native_gadgets;
 mod r1cs_gadgets;
 mod utils;
-pub mod commitment;
-pub mod crh;

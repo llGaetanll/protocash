@@ -6,16 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ark-ff = "0.3.0"
-ark-std = "0.3.0"
-ark-snark = "0.3.0"
-ark-bls12-381 = "0.3.0"
-ark-ec = { version = "^0.3.0", default-features = false }
-ark-ed-on-bls12-381 = { version = "0.3.0", features = ["r1cs"] }
-ark-crypto-primitives = { version = "0.3.0", features = ["r1cs"] }
-ark-relations = { version = "^0.3.0", default-features = false }
-ark-r1cs-std = { version = "^0.3.0", default-features = false }
-ark-serialize = { version = "^0.3.0", default-features = false }
+ark-ff = "0.4.0"
+ark-std = "0.4.0"
+ark-snark = "0.4.0"
+ark-bls12-381 = "0.4.0"
+ark-ec = { version = "0.4.0", default-features = false }
+ark-ed-on-bls12-381 = { version = "0.4.0", features = ["r1cs"] }
+ark-crypto-primitives = { version = "0.4.0", features = ["r1cs", "commitment",
+  "crh", "prf", "merkle_tree"] }
+ark-relations = { version = "0.4.0", default-features = false }
+ark-r1cs-std = { version = "0.4.0", default-features = false }
+ark-serialize = { version = "0.4.0", default-features = false }
 
 rand = "0.8.5"
 lazy_static = "1.4.0"

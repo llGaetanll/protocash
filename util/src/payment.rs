@@ -4,8 +4,8 @@ use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, eq::EqGadget};
 use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_relations::r1cs::{ConstraintSystemRef, Result};
 
-use crate::merkletree::{Root, RootVar, TreePath, TreePathVar};
-use crate::types::{Coin, CoinCommitment, CoinCommitmentVar, CoinID, Key};
+use crate::merkletree::{Leaf, LeafVar, Root, RootVar, TreePath, TreePathVar};
+use crate::types::{Coin, CoinID, Key};
 use crate::util::UnitVar;
 
 pub struct PaymentProof {
@@ -14,7 +14,8 @@ pub struct PaymentProof {
     pub root: Root,
 
     /// The leaf corresponding to the Coin Commitment belonging to the user.
-    pub leaf: CoinCommitment,
+    /// TODO: just ensure that a `CoinCommitment` can be converted to this
+    pub leaf: Leaf,
 
     // Private Witnesses
     /// The path down the [`MerkleTree`] which leads to `leaf`.
@@ -34,8 +35,7 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
     fn generate_constraints(self, cs: ConstraintSystemRef<ConstraintF>) -> Result<()> {
         // public inputs
         let root = RootVar::new_input(ark_relations::ns!(cs, "merkle_root"), || Ok(&self.root))?;
-        let leaf =
-            CoinCommitmentVar::new_input(ark_relations::ns!(cs, "merkle_leaf"), || Ok(self.leaf))?;
+        let leaf = LeafVar::new_input(ark_relations::ns!(cs, "merkle_leaf"), || Ok(self.leaf))?;
 
         // private witnesses
 
@@ -66,12 +66,11 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
 
         is_member.enforce_equal(&Boolean::TRUE)?;
 
-        // TODO
         // // 2. We enforce that `serial_no = prf(sk, pre_serial_no)`, so that the the payer can't lie
         // //    to the payee
         // let expected_serial_no = UInt64::new_constant(
         //     ark_relations::ns!(cs, "expected_serial_no"),
-        //     f(self.sk, self.coin.pre_serial_no),
+        //     f(self.sk, self.coin.pre_serial_number),
         // )?;
         //
         // expected_serial_no.enforce_equal(&serial_no)?;

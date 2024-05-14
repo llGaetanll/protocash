@@ -1,6 +1,9 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{CommitmentGadget, CommitmentScheme, Error as ArkError};
-use ark_ff::{to_bytes, ToConstraintField};
+use ark_crypto_primitives::{
+    commitment::{CommitmentGadget, CommitmentScheme},
+    Error as ArkError,
+};
+use ark_ff::{BigInteger, ToConstraintField};
 use ark_r1cs_std::{
     fields::fp::FpVar, uint8::UInt8, R1CSVar, ToBytesGadget, ToConstraintFieldGadget,
 };
@@ -30,7 +33,7 @@ impl CommitmentScheme for Bls12PoseidonCommitter {
         r: &Self::Randomness,
     ) -> Result<Self::Output, ArkError> {
         // Concat all the inputs and pack them into field elements
-        let hash_input: Vec<u8> = [COM_DOMAIN_SEP, &to_bytes!(r).unwrap(), input].concat();
+        let hash_input: Vec<u8> = [COM_DOMAIN_SEP, &r.0.to_bytes_be(), input].concat();
         let packed_input: Vec<BlsFr> = hash_input
             .to_field_elements()
             .expect("could not pack inputs");

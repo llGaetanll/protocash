@@ -1,6 +1,6 @@
 use crate::poseidon::Bls12PoseidonCommitter;
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{CommitmentGadget, CommitmentScheme};
+use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
 
 pub type CoinCommitment = <Bls12PoseidonCommitter as CommitmentScheme>::Output;
 pub type CommRand = <Bls12PoseidonCommitter as CommitmentScheme>::Randomness;
