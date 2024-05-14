@@ -12,13 +12,27 @@ use self::{
 
 // from: https://github.com/rozbb/zkcreds-rs/blob/main/src/poseidon_utils.rs
 
+pub mod commitment;
+pub mod crh;
+mod native_gadgets;
+mod r1cs_gadgets;
+mod utils;
+
 /// A commitment scheme defined using the Poseidon hash function over BLS12-381
-pub struct Bls12PoseidonCommitter;
+pub struct Bls12PoseidonCommitment;
+pub struct Bls12PoseidonCommitmentVar;
 
-/// Represents the collision-resistant hashing functionality of Poseidon over BLS12-381
+// CRH for Poseidon over BLS12-381
 pub struct Bls12PoseidonCrh;
+pub struct Bls12PoseidonCrhVar;
 
-pub struct Bls12PoseidonDigestConverter;
+// Two to one CRH for Poseidon over BLS12-381
+pub struct Bls12PoseidonTwoToOneCrh;
+pub struct Bls12PoseidonTwoToOneCrhVar;
+
+/// Digest converter for Poseidon over BLS12-381
+pub struct Bls12PoseidonDigest;
+pub struct Bls12PoseidonDigestVar;
 
 fn setup_poseidon_params<F: PrimeField>(curve: Curve, exp: i8, width: u8) -> PoseidonParameters<F> {
     let pos_data =
@@ -76,9 +90,3 @@ fn poseidon_iterated_hash_gadget(
 
     Ok(running_hash)
 }
-
-pub mod commitment;
-pub mod crh;
-mod native_gadgets;
-mod r1cs_gadgets;
-mod utils;

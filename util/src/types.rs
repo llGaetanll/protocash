@@ -1,12 +1,10 @@
-use crate::poseidon::Bls12PoseidonCommitter;
+use crate::poseidon::Bls12PoseidonCommitment;
 use ark_bls12_381::Fr as BlsFr;
 use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
 
-pub type CoinCommitment = <Bls12PoseidonCommitter as CommitmentScheme>::Output;
-pub type CommRand = <Bls12PoseidonCommitter as CommitmentScheme>::Randomness;
-
-pub type CoinCommitmentVar =
-    <Bls12PoseidonCommitter as CommitmentGadget<Bls12PoseidonCommitter, BlsFr>>::OutputVar;
+pub type CommRand = <Bls12PoseidonCommitment as CommitmentScheme>::Randomness;
+pub type CoinCommitment = <Bls12PoseidonCommitment as CommitmentScheme>::Output;
+pub type CoinCommitmentVar = <Bls12PoseidonCommitment as CommitmentGadget<Bls12PoseidonCommitment, BlsFr>>::OutputVar;
 
 /// A coin identifier, often called the `pre_serial_number`.
 pub type CoinID = BlsFr;

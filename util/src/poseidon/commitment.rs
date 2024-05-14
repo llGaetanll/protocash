@@ -13,10 +13,10 @@ use rand::Rng;
 use crate::util::UnitVar;
 
 use super::{
-    poseidon_iterated_hash, poseidon_iterated_hash_gadget, Bls12PoseidonCommitter, COM_DOMAIN_SEP,
+    poseidon_iterated_hash, poseidon_iterated_hash_gadget, Bls12PoseidonCommitment, COM_DOMAIN_SEP,
 };
 
-impl CommitmentScheme for Bls12PoseidonCommitter {
+impl CommitmentScheme for Bls12PoseidonCommitment {
     type Output = BlsFr;
     // We don't need parameters because they're set globally in the above lazy_static
     type Parameters = ();
@@ -43,7 +43,7 @@ impl CommitmentScheme for Bls12PoseidonCommitter {
     }
 }
 
-impl CommitmentGadget<Bls12PoseidonCommitter, BlsFr> for Bls12PoseidonCommitter {
+impl CommitmentGadget<Bls12PoseidonCommitment, BlsFr> for Bls12PoseidonCommitment {
     type OutputVar = FpVar<BlsFr>;
     type ParametersVar = UnitVar<BlsFr>;
     type RandomnessVar = FpVar<BlsFr>;

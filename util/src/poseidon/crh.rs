@@ -5,28 +5,34 @@ use ark_crypto_primitives::{
     Error as ArkError,
 };
 use ark_ff::{BigInteger, ToConstraintField};
-use ark_r1cs_std::{fields::fp::FpVar, uint8::UInt8, R1CSVar, ToConstraintFieldGadget};
+use ark_r1cs_std::{fields::fp::FpVar, uint8::UInt8, R1CSVar, ToConstraintFieldGadget, ToBytesGadget};
 use ark_relations::r1cs::SynthesisError;
 use rand::Rng;
 
 use crate::{
     poseidon::{poseidon_iterated_hash_gadget, CRH_DOMAIN_SEP},
+    types::{CoinCommitment, CoinCommitmentVar},
     util::UnitVar,
 };
 
-use super::Bls12PoseidonCrh;
-use super::{poseidon_iterated_hash, Bls12PoseidonDigestConverter};
+use super::{poseidon_iterated_hash, Bls12PoseidonDigest};
+use super::{
+    Bls12PoseidonCrh, Bls12PoseidonCrhVar, Bls12PoseidonDigestVar, Bls12PoseidonTwoToOneCrh,
+    Bls12PoseidonTwoToOneCrhVar,
+};
 
-pub type CRHInput = Vec<u8>;
+// input and output types
+
+pub type CRHInput = CoinCommitment;
+pub type CRHInputVar = CoinCommitmentVar;
+
 pub type CRHOutput = BlsFr;
-
-pub type CRHInputVar = Vec<UInt8<BlsFr>>;
 pub type CRHOutputVar = FpVar<BlsFr>;
 
 pub type TwoToOneCRHInput = Vec<u8>;
-pub type TwoToOneCRHOutput = BlsFr;
-
 pub type TwoToOneCRHInputVar = Vec<UInt8<BlsFr>>;
+
+pub type TwoToOneCRHOutput = BlsFr;
 pub type TwoToOneCRHOutputVar = FpVar<BlsFr>;
 
 impl CRHScheme for Bls12PoseidonCrh {
@@ -42,13 +48,14 @@ impl CRHScheme for Bls12PoseidonCrh {
         _: &Self::Parameters,
         input: T,
     ) -> Result<Self::Output, ArkError> {
-        let input: &[u8] = input.borrow();
+        let input: &BlsFr = input.borrow();
+        let input: Vec<u8> = input.0.to_bytes_be();
 
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(input.len(), 32);
 
         // Concat all the inputs and pack them into field elements
-        let hash_input: Vec<u8> = [CRH_DOMAIN_SEP, input].concat();
+        let hash_input: Vec<u8> = [CRH_DOMAIN_SEP, &input].concat();
         let packed_input: Vec<BlsFr> = hash_input
             .to_field_elements()
             .expect("could not pack inputs");
@@ -58,7 +65,7 @@ impl CRHScheme for Bls12PoseidonCrh {
     }
 }
 
-impl CRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrh {
+impl CRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrhVar {
     type InputVar = CRHInputVar;
     type OutputVar = CRHOutputVar;
     type ParametersVar = UnitVar<BlsFr>;
@@ -67,6 +74,9 @@ impl CRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrh {
         _: &Self::ParametersVar,
         input: &Self::InputVar,
     ) -> Result<Self::OutputVar, SynthesisError> {
+        let input: &FpVar<BlsFr> = input;
+        let input = input.to_bytes()?;
+
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(input.len(), 32);
 
@@ -84,7 +94,7 @@ impl CRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrh {
     }
 }
 
-impl TwoToOneCRHScheme for Bls12PoseidonCrh {
+impl TwoToOneCRHScheme for Bls12PoseidonTwoToOneCrh {
     type Input = TwoToOneCRHInput;
     type Output = TwoToOneCRHOutput;
     type Parameters = ();
@@ -124,7 +134,7 @@ impl TwoToOneCRHScheme for Bls12PoseidonCrh {
     }
 }
 
-impl TwoToOneCRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrh {
+impl TwoToOneCRHSchemeGadget<Bls12PoseidonTwoToOneCrh, BlsFr> for Bls12PoseidonTwoToOneCrhVar {
     type InputVar = TwoToOneCRHInputVar;
     type OutputVar = TwoToOneCRHOutputVar;
     type ParametersVar = UnitVar<BlsFr>;
@@ -164,18 +174,18 @@ impl TwoToOneCRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrh {
     }
 }
 
-impl DigestConverter<CRHOutput, CRHInput> for Bls12PoseidonDigestConverter {
-    type TargetType = Vec<u8>;
+impl DigestConverter<CRHOutput, TwoToOneCRHInput> for Bls12PoseidonDigest {
+    type TargetType = TwoToOneCRHInput;
 
-    fn convert(item: BlsFr) -> Result<Self::TargetType, ArkError> {
+    fn convert(item: CRHOutput) -> Result<Self::TargetType, ArkError> {
         Ok(item.0.to_bytes_be())
     }
 }
 
-impl DigestVarConverter<CRHOutputVar, CRHInputVar> for Bls12PoseidonDigestConverter {
-    type TargetType = Vec<UInt8<BlsFr>>;
+impl DigestVarConverter<CRHOutputVar, TwoToOneCRHInputVar> for Bls12PoseidonDigestVar {
+    type TargetType = TwoToOneCRHInputVar;
 
-    fn convert(from: FpVar<BlsFr>) -> Result<Self::TargetType, SynthesisError> {
-        todo!()
+    fn convert(from: CRHOutputVar) -> Result<Self::TargetType, SynthesisError> {
+        from.to_bytes()
     }
 }
