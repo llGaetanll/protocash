@@ -260,17 +260,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arkworks-utils"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c09e682dc152e3d444c01da4fbbd61b8ccf9493091546193656fae93d2c3968"
-dependencies = [
- "ark-ff",
- "ark-std",
- "hex",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1133,7 +1122,7 @@ dependencies = [
  "ark-serialize",
  "ark-snark",
  "ark-std",
- "arkworks-utils",
+ "hex",
  "lazy_static",
  "rand",
 ]

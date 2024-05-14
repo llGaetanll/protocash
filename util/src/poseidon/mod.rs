@@ -2,16 +2,14 @@ use ark_bls12_381::Fr as BlsFr;
 use ark_ff::PrimeField;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use arkworks_utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve};
 use lazy_static::lazy_static;
 
-use self::{native_gadgets::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters}, r1cs_gadgets::{FieldHasherGadget, PoseidonGadget}};
+use self::{native_gadgets::{sbox::PoseidonSbox, FieldHasher, Poseidon, PoseidonParameters}, r1cs_gadgets::{FieldHasherGadget, PoseidonGadget}, utils::{bytes_matrix_to_f, bytes_vec_to_f, Curve}};
 
 // from: https://github.com/rozbb/zkcreds-rs/blob/main/src/poseidon_utils.rs
 
 fn setup_poseidon_params<F: PrimeField>(curve: Curve, exp: i8, width: u8) -> PoseidonParameters<F> {
-    let pos_data =
-        arkworks_utils::poseidon_params::setup_poseidon_params(curve, exp, width).unwrap();
+    let pos_data = crate::poseidon::utils::poseidon_params::setup_poseidon_params(curve, exp, width).unwrap();
 
     let mds_f = bytes_matrix_to_f(&pos_data.mds);
     let rounds_f = bytes_vec_to_f(&pos_data.rounds);
@@ -74,5 +72,6 @@ fn poseidon_iterated_hash_gadget(
 
 mod native_gadgets;
 mod r1cs_gadgets;
+mod utils;
 pub mod commitment;
 pub mod crh;
