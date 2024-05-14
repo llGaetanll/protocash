@@ -5,7 +5,9 @@ use ark_crypto_primitives::{
     Error as ArkError,
 };
 use ark_ff::{BigInteger, ToConstraintField};
-use ark_r1cs_std::{fields::fp::FpVar, uint8::UInt8, R1CSVar, ToConstraintFieldGadget, ToBytesGadget};
+use ark_r1cs_std::{
+    fields::fp::FpVar, uint8::UInt8, R1CSVar, ToBytesGadget, ToConstraintFieldGadget,
+};
 use ark_relations::r1cs::SynthesisError;
 use rand::Rng;
 

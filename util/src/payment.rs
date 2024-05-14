@@ -40,7 +40,8 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
         // private witnesses
 
         // A private witness of the path down the MerkleTree which leads to the commitment.
-        let path = TreePathVar::new_witness(ark_relations::ns!(cs, "merkle_tree_path"), || Ok(self.path))?;
+        let path =
+            TreePathVar::new_witness(ark_relations::ns!(cs, "merkle_tree_path"), || Ok(self.path))?;
 
         let pk = FpVar::new_witness(ark_relations::ns!(cs, "pub_key"), || Ok(self.coin.pk))?;
 

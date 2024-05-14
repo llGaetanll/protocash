@@ -4,7 +4,8 @@ use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
 
 pub type CommRand = <Bls12PoseidonCommitment as CommitmentScheme>::Randomness;
 pub type CoinCommitment = <Bls12PoseidonCommitment as CommitmentScheme>::Output;
-pub type CoinCommitmentVar = <Bls12PoseidonCommitment as CommitmentGadget<Bls12PoseidonCommitment, BlsFr>>::OutputVar;
+pub type CoinCommitmentVar =
+    <Bls12PoseidonCommitment as CommitmentGadget<Bls12PoseidonCommitment, BlsFr>>::OutputVar;
 
 /// A coin identifier, often called the `pre_serial_number`.
 pub type CoinID = BlsFr;

@@ -44,6 +44,9 @@ pub type Root = <Bls12PoseidonTwoToOneCrh as TwoToOneCRHScheme>::Output;
 pub type Leaf = <Bls12PoseidonCrh as CRHScheme>::Input;
 pub type TreePath = Path<MerkleConfig>;
 
-pub type RootVar = <Bls12PoseidonTwoToOneCrhVar as TwoToOneCRHSchemeGadget<Bls12PoseidonTwoToOneCrh, BlsFr>>::OutputVar;
+pub type RootVar = <Bls12PoseidonTwoToOneCrhVar as TwoToOneCRHSchemeGadget<
+    Bls12PoseidonTwoToOneCrh,
+    BlsFr,
+>>::OutputVar;
 pub type LeafVar = <Bls12PoseidonCrhVar as CRHSchemeGadget<Bls12PoseidonCrh, BlsFr>>::InputVar;
 pub type TreePathVar = PathVar<MerkleConfig, BlsFr, MerkleConfigVar>;
