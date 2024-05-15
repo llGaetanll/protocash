@@ -10,11 +10,35 @@ use ark_r1cs_std::{
 use ark_relations::r1cs::SynthesisError;
 use rand::Rng;
 
-use crate::util::UnitVar;
+use crate::{
+    types::{Coin, CoinCommitment},
+    util::UnitVar,
+};
 
 use super::{
     poseidon_iterated_hash, poseidon_iterated_hash_gadget, Bls12PoseidonCommitment, COM_DOMAIN_SEP,
 };
+
+impl Bls12PoseidonCommitment {
+    /// Generate a random `CoinCommitment`.
+    pub fn rand<R>(rng: &mut R) -> Result<CoinCommitment, ArkError>
+    where
+        R: Rng + ?Sized,
+    {
+        let coin = Coin::rand(rng);
+        Self::new(&coin)
+    }
+
+    /// Create a new `CoinCommitment` from the [`Coin`].
+    pub fn new(coin: &Coin) -> Result<CoinCommitment, ArkError> {
+        let pk = coin.pk.0.to_bytes_le();
+        let pre_serial_number = coin.pre_serial_number.0.to_bytes_le();
+
+        let input_hash = [pk.as_slice(), pre_serial_number.as_slice()].concat();
+
+        <Bls12PoseidonCommitment as CommitmentScheme>::commit(&(), &input_hash, &coin.com_rnd)
+    }
+}
 
 impl CommitmentScheme for Bls12PoseidonCommitment {
     type Output = BlsFr;
@@ -32,8 +56,10 @@ impl CommitmentScheme for Bls12PoseidonCommitment {
         input: &[u8],
         r: &Self::Randomness,
     ) -> Result<Self::Output, ArkError> {
+        let rand_bytes = r.0.to_bytes_le(); // NOTE: arkworks uses little-endian
+
         // Concat all the inputs and pack them into field elements
-        let hash_input: Vec<u8> = [COM_DOMAIN_SEP, &r.0.to_bytes_be(), input].concat();
+        let hash_input: Vec<u8> = [COM_DOMAIN_SEP, &rand_bytes, input].concat();
         let packed_input: Vec<BlsFr> = hash_input
             .to_field_elements()
             .expect("could not pack inputs");
@@ -59,7 +85,7 @@ impl CommitmentGadget<Bls12PoseidonCommitment, BlsFr> for Bls12PoseidonCommitmen
         // Concat all the inputs and pack them into field elements
         let hash_input: Vec<UInt8<BlsFr>> = [
             &UInt8::constant_vec(COM_DOMAIN_SEP),
-            &r.to_bytes().unwrap(),
+            &r.to_bytes().unwrap(), // to_bytes uses little-endian
             input,
         ]
         .concat();

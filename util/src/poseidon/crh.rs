@@ -31,8 +31,8 @@ pub type CRHInputVar = CoinCommitmentVar;
 pub type CRHOutput = BlsFr;
 pub type CRHOutputVar = FpVar<BlsFr>;
 
-pub type TwoToOneCRHInput = Vec<u8>;
-pub type TwoToOneCRHInputVar = Vec<UInt8<BlsFr>>;
+pub type TwoToOneCRHInput = BlsFr;
+pub type TwoToOneCRHInputVar = FpVar<BlsFr>;
 
 pub type TwoToOneCRHOutput = BlsFr;
 pub type TwoToOneCRHOutputVar = FpVar<BlsFr>;
@@ -51,7 +51,7 @@ impl CRHScheme for Bls12PoseidonCrh {
         input: T,
     ) -> Result<Self::Output, ArkError> {
         let input: &BlsFr = input.borrow();
-        let input: Vec<u8> = input.0.to_bytes_be();
+        let input: Vec<u8> = input.0.to_bytes_le(); // arkworks uses little-endian
 
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(input.len(), 32);
@@ -77,7 +77,7 @@ impl CRHSchemeGadget<Bls12PoseidonCrh, BlsFr> for Bls12PoseidonCrhVar {
         input: &Self::InputVar,
     ) -> Result<Self::OutputVar, SynthesisError> {
         let input: &FpVar<BlsFr> = input;
-        let input = input.to_bytes()?;
+        let input = input.to_bytes()?; // NOTE: uses little-endian
 
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(input.len(), 32);
@@ -105,34 +105,39 @@ impl TwoToOneCRHScheme for Bls12PoseidonTwoToOneCrh {
         Ok(())
     }
 
+    // takes a borrow of the inputs, and outputs a single of the outputs
     fn evaluate<T: std::borrow::Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, ArkError> {
+        Self::compress(parameters, left_input, right_input)
+    }
+
+    // takes two of the outputs, and outputs one output
+    fn compress<T: std::borrow::Borrow<Self::Output>>(
         _: &Self::Parameters,
         left_input: T,
         right_input: T,
     ) -> Result<Self::Output, ArkError> {
-        let left_input: &[_] = left_input.borrow();
-        let right_input: &[_] = right_input.borrow();
+        let left_input: &BlsFr = left_input.borrow();
+        let left_input = left_input.0.to_bytes_le();
+
+        let right_input: &BlsFr = right_input.borrow();
+        let right_input = right_input.0.to_bytes_le();
 
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(left_input.len(), 32);
         assert_eq!(right_input.len(), 32);
 
         // Concat all the inputs and pack them into field elements
-        let hash_input: Vec<u8> = [CRH_DOMAIN_SEP, left_input, right_input].concat();
+        let hash_input: Vec<u8> = [CRH_DOMAIN_SEP, &left_input, &right_input].concat();
         let packed_input: Vec<BlsFr> = hash_input
             .to_field_elements()
             .expect("could not pack inputs");
 
         // Compute the hash
         Ok(poseidon_iterated_hash(&packed_input))
-    }
-
-    fn compress<T: std::borrow::Borrow<Self::Output>>(
-        parameters: &Self::Parameters,
-        left_input: T,
-        right_input: T,
-    ) -> Result<Self::Output, ArkError> {
-        unimplemented!()
     }
 }
 
@@ -142,10 +147,24 @@ impl TwoToOneCRHSchemeGadget<Bls12PoseidonTwoToOneCrh, BlsFr> for Bls12PoseidonT
     type ParametersVar = UnitVar<BlsFr>;
 
     fn evaluate(
-        _: &Self::ParametersVar,
+        parameters: &Self::ParametersVar,
         left_input: &Self::InputVar,
         right_input: &Self::InputVar,
     ) -> Result<Self::OutputVar, SynthesisError> {
+        Self::compress(parameters, left_input, right_input)
+    }
+
+    fn compress(
+        _: &Self::ParametersVar,
+        left_input: &Self::OutputVar,
+        right_input: &Self::OutputVar,
+    ) -> Result<Self::OutputVar, SynthesisError> {
+        let left_input: &FpVar<BlsFr> = left_input;
+        let left_input: Vec<UInt8<_>> = left_input.to_bytes().unwrap();
+
+        let right_input: &FpVar<BlsFr> = right_input;
+        let right_input: Vec<UInt8<_>> = right_input.to_bytes().unwrap();
+
         // We only use this for Merkle tree hashing over BLS12-381, so just fix the input len to 32
         assert_eq!(left_input.len(), 32);
         assert_eq!(right_input.len(), 32);
@@ -159,6 +178,7 @@ impl TwoToOneCRHSchemeGadget<Bls12PoseidonTwoToOneCrh, BlsFr> for Bls12PoseidonT
             right_input.as_slice(),
         ]
         .concat();
+
         let packed_input: Vec<FpVar<BlsFr>> = hash_input
             .to_constraint_field()
             .expect("could not pack inputs");
@@ -166,21 +186,13 @@ impl TwoToOneCRHSchemeGadget<Bls12PoseidonTwoToOneCrh, BlsFr> for Bls12PoseidonT
         // Compute the hash
         poseidon_iterated_hash_gadget(&mut cs, &packed_input)
     }
-
-    fn compress(
-        parameters: &Self::ParametersVar,
-        left_input: &Self::OutputVar,
-        right_input: &Self::OutputVar,
-    ) -> Result<Self::OutputVar, SynthesisError> {
-        unimplemented!()
-    }
 }
 
 impl DigestConverter<CRHOutput, TwoToOneCRHInput> for Bls12PoseidonDigest {
     type TargetType = TwoToOneCRHInput;
 
     fn convert(item: CRHOutput) -> Result<Self::TargetType, ArkError> {
-        Ok(item.0.to_bytes_be())
+        Ok(item)
     }
 }
 
@@ -188,6 +200,6 @@ impl DigestVarConverter<CRHOutputVar, TwoToOneCRHInputVar> for Bls12PoseidonDige
     type TargetType = TwoToOneCRHInputVar;
 
     fn convert(from: CRHOutputVar) -> Result<Self::TargetType, SynthesisError> {
-        from.to_bytes()
+        Ok(from)
     }
 }

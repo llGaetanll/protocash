@@ -38,7 +38,6 @@ pub fn setup_poseidon_params(
 ) -> Result<PoseidonData, FromHexError> {
     // Making params for poseidon in merkle tree
     match (curve, exp, width) {
-        #[cfg(feature = "poseidon_bls381_x3_3")]
         (Curve::Bls381, 3, 3) => {
             #[path = "./bls381_x3_3.rs"]
             mod bls381_x3_3;
@@ -70,7 +69,6 @@ pub fn setup_poseidon_params(
                 EXPONENTIATION,
             )
         }
-        #[cfg(feature = "poseidon_bls381_x3_5")]
         (Curve::Bls381, 3, 5) => {
             #[path = "./bls381_x3_5.rs"]
             pub mod bls381_x3_5;
@@ -102,7 +100,6 @@ pub fn setup_poseidon_params(
                 EXPONENTIATION,
             )
         }
-        #[cfg(feature = "poseidon_bls381_x5_3")]
         (Curve::Bls381, 5, 3) => {
             #[path = "./bls381_x5_3.rs"]
             pub mod bls381_x5_3;
@@ -166,7 +163,6 @@ pub fn setup_poseidon_params(
                 EXPONENTIATION,
             )
         }
-        #[cfg(feature = "poseidon_bls381_x5_5")]
         (Curve::Bls381, 5, 5) => {
             #[path = "./bls381_x5_5.rs"]
             pub mod bls381_x5_5;
@@ -198,7 +194,6 @@ pub fn setup_poseidon_params(
                 EXPONENTIATION,
             )
         }
-        #[cfg(feature = "poseidon_bls381_x17_3")]
         (Curve::Bls381, 17, 3) => {
             #[path = "./bls381_x17_3.rs"]
             pub mod bls381_x17_3;
@@ -230,7 +225,6 @@ pub fn setup_poseidon_params(
                 EXPONENTIATION,
             )
         }
-        #[cfg(feature = "poseidon_bls381_x17_5")]
         (Curve::Bls381, 17, 5) => {
             #[path = "./bls381_x17_5.rs"]
             pub mod bls381_x17_5;

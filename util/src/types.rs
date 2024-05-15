@@ -1,6 +1,8 @@
 use crate::poseidon::Bls12PoseidonCommitment;
 use ark_bls12_381::Fr as BlsFr;
 use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
+use ark_std::UniformRand;
+use rand::Rng;
 
 pub type CommRand = <Bls12PoseidonCommitment as CommitmentScheme>::Randomness;
 pub type CoinCommitment = <Bls12PoseidonCommitment as CommitmentScheme>::Output;
@@ -13,6 +15,9 @@ pub type CoinID = BlsFr;
 /// A type used to represent public/private keys of some user on the network.
 pub type Key = BlsFr;
 
+/// A type used to represent the randomness associated with a commitment.
+pub type Rand = BlsFr;
+
 /// A Coin. This is used in the MerkleTree as a `Coin` commitment.
 pub struct Coin {
     /// The public key of the owner of this coin.
@@ -22,5 +27,28 @@ pub struct Coin {
     pub pre_serial_number: CoinID,
 
     /// Noise used when generating the coin commitment
-    pub com_rnd: u64,
+    pub com_rnd: Rand,
+}
+
+impl Coin {
+    /// Generate a random [`Coin`]
+    pub fn rand<R>(rng: &mut R) -> Self
+    where
+        R: Rng + ?Sized,
+    {
+        // generate a random public key
+        let pk = BlsFr::rand(rng);
+
+        // generate a random pre_serial_number
+        let pre_serial_number = BlsFr::rand(rng);
+
+        // generate some random noise
+        let com_rnd = BlsFr::rand(rng);
+
+        Self {
+            pk,
+            pre_serial_number,
+            com_rnd,
+        }
+    }
 }
