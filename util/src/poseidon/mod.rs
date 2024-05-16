@@ -1,4 +1,5 @@
 use ark_bls12_381::Fr as BlsFr;
+use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
 use ark_ff::PrimeField;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
@@ -14,9 +15,15 @@ use self::{
 
 pub mod commitment;
 pub mod crh;
+pub mod merkletree;
 mod native_gadgets;
 mod r1cs_gadgets;
 mod utils;
+
+pub type CommRand = <Bls12PoseidonCommitment as CommitmentScheme>::Randomness;
+pub type CoinCommitment = <Bls12PoseidonCommitment as CommitmentScheme>::Output;
+pub type CoinCommitmentVar =
+    <Bls12PoseidonCommitment as CommitmentGadget<Bls12PoseidonCommitment, BlsFr>>::OutputVar;
 
 /// A commitment scheme defined using the Poseidon hash function over BLS12-381
 pub struct Bls12PoseidonCommitment;
@@ -60,7 +67,7 @@ lazy_static! {
         setup_poseidon_params(Curve::Bls381, 3, POSEIDON_WIDTH);
 }
 
-fn poseidon_iterated_hash(input: &[BlsFr]) -> BlsFr {
+pub fn poseidon_iterated_hash(input: &[BlsFr]) -> BlsFr {
     let hasher = Poseidon::new(BLS12_POSEIDON_PARAMS.clone());
     let first_block_len = core::cmp::min(input.len(), (POSEIDON_WIDTH - 1) as usize);
 
@@ -73,7 +80,7 @@ fn poseidon_iterated_hash(input: &[BlsFr]) -> BlsFr {
     running_hash
 }
 
-fn poseidon_iterated_hash_gadget(
+pub fn poseidon_iterated_hash_gadget(
     cs: &mut ConstraintSystemRef<BlsFr>,
     input: &[FpVar<BlsFr>],
 ) -> Result<FpVar<BlsFr>, SynthesisError> {

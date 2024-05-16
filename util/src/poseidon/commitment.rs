@@ -10,10 +10,8 @@ use ark_r1cs_std::{
 use ark_relations::r1cs::SynthesisError;
 use rand::Rng;
 
-use crate::{
-    types::{Coin, CoinCommitment},
-    util::UnitVar,
-};
+use super::CoinCommitment;
+use crate::{types::Coin, util::UnitVar};
 
 use super::{
     poseidon_iterated_hash, poseidon_iterated_hash_gadget, Bls12PoseidonCommitment, COM_DOMAIN_SEP,

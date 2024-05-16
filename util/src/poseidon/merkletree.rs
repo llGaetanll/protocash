@@ -7,14 +7,16 @@ use ark_crypto_primitives::{
     },
 };
 
-use super::poseidon::Bls12PoseidonCrh;
-use crate::poseidon::{
+use super::Bls12PoseidonCrh;
+use super::{
     crh::{
         CRHInput, CRHInputVar, CRHOutput, CRHOutputVar, TwoToOneCRHOutput, TwoToOneCRHOutputVar,
     },
     Bls12PoseidonCrhVar, Bls12PoseidonDigest, Bls12PoseidonDigestVar, Bls12PoseidonTwoToOneCrh,
     Bls12PoseidonTwoToOneCrhVar,
 };
+
+pub use super::{CoinCommitment, CoinCommitmentVar};
 
 #[derive(Clone)]
 pub struct MerkleConfig;

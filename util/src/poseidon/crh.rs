@@ -13,11 +13,10 @@ use rand::Rng;
 
 use crate::{
     poseidon::{poseidon_iterated_hash_gadget, CRH_DOMAIN_SEP},
-    types::{CoinCommitment, CoinCommitmentVar},
     util::UnitVar,
 };
 
-use super::{poseidon_iterated_hash, Bls12PoseidonDigest};
+use super::{poseidon_iterated_hash, Bls12PoseidonDigest, CoinCommitment, CoinCommitmentVar};
 use super::{
     Bls12PoseidonCrh, Bls12PoseidonCrhVar, Bls12PoseidonDigestVar, Bls12PoseidonTwoToOneCrh,
     Bls12PoseidonTwoToOneCrhVar,

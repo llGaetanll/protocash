@@ -1,13 +1,8 @@
-use crate::poseidon::Bls12PoseidonCommitment;
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::commitment::{CommitmentGadget, CommitmentScheme};
 use ark_std::UniformRand;
 use rand::Rng;
 
-pub type CommRand = <Bls12PoseidonCommitment as CommitmentScheme>::Randomness;
-pub type CoinCommitment = <Bls12PoseidonCommitment as CommitmentScheme>::Output;
-pub type CoinCommitmentVar =
-    <Bls12PoseidonCommitment as CommitmentGadget<Bls12PoseidonCommitment, BlsFr>>::OutputVar;
+pub use crate::merkletree::CoinCommitment;
 
 /// A coin identifier, often called the `pre_serial_number`.
 pub type CoinID = BlsFr;
@@ -19,6 +14,7 @@ pub type Key = BlsFr;
 pub type Rand = BlsFr;
 
 /// A Coin. This is used in the MerkleTree as a `Coin` commitment.
+#[derive(Clone)]
 pub struct Coin {
     /// The public key of the owner of this coin.
     pub pk: Key,
