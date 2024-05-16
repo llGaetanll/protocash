@@ -269,4 +269,24 @@ mod test {
 
         Ok(())
     }
+
+    #[test]
+    /// Check that the proof size is not too big
+    fn proof_size() -> Result<(), Box<dyn Error>> {
+        let index = 3;
+        let height = 14;
+
+        let proof = generate_new_payment(index, height)?;
+
+        let cs = ConstraintSystem::new_ref();
+        proof.generate_constraints(cs.clone()).unwrap();
+
+        let n = cs.num_constraints();
+        println!("{n}");
+
+        // n = ~8000 for these inputs
+        assert!(n < 30_000);
+
+        Ok(())
+    }
 }
