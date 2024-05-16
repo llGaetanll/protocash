@@ -101,6 +101,8 @@ Then, `A` needs to provide a zero knowledge proof that
      In fact, `sn` is not stored anywhere, it is just used in the proof that `A`
      provides when making a transaction.
 
+#### After the proof is made
+
 If `A` can make this proof, a new commitment `c' = H(pk_B, pre_serial_no',
 com_rnd')` is added by the validators, to the Merkle Tree, where
 - `pre_serial_no' = H(sn)`
