@@ -2,7 +2,7 @@ use ark_bls12_381::Fr as BlsFr;
 use ark_std::UniformRand;
 use rand::Rng;
 
-pub use crate::merkletree::CoinCommitment;
+pub use crate::poseidon::CoinCommitment;
 
 /// A coin identifier, often called the `pre_serial_number`.
 pub type CoinID = BlsFr;

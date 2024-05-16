@@ -4,7 +4,7 @@ use ark_crypto_primitives::{
 };
 use ark_relations::r1cs::SynthesisError;
 
-use super::merkletree::{CRHOutput, CRHOutputVar, TwoToOneCRHInput, TwoToOneCRHInputVar};
+use super::{CRHOutput, CRHOutputVar, TwoToOneCRHInput, TwoToOneCRHInputVar};
 
 pub struct PoseidonDigest;
 impl DigestConverter<CRHOutput, TwoToOneCRHInput> for PoseidonDigest {

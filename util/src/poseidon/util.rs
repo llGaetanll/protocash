@@ -2,10 +2,6 @@ use ark_ff::{fields::models::*, BigInteger, PrimeField};
 
 use ark_crypto_primitives::sponge::poseidon::{PoseidonConfig, PoseidonDefaultConfigEntry};
 
-pub mod commitment;
-mod digest;
-pub mod merkletree;
-
 const PARAMS_OPT_FOR_CONSTRAINTS: [PoseidonDefaultConfigEntry; 7] = [
     PoseidonDefaultConfigEntry::new(2, 17, 8, 31, 0),
     PoseidonDefaultConfigEntry::new(3, 5, 8, 56, 0),
@@ -26,7 +22,7 @@ const PARAMS_OPT_FOR_WEIGHTS: [PoseidonDefaultConfigEntry; 7] = [
     PoseidonDefaultConfigEntry::new(8, 257, 8, 13, 0),
 ];
 
-pub struct PoseidonGrainLFSR {
+struct PoseidonGrainLFSR {
     pub prime_num_bits: u64,
 
     pub state: [bool; 80],
@@ -198,6 +194,7 @@ impl PoseidonGrainLFSR {
     }
 }
 
+/// TODO: generate this statically for static params
 /// Uses the `PoseidonDefaultConfig` to compute the Poseidon parameters.
 pub fn get_default_poseidon_parameters<P: FpConfig<N>, const N: usize>(
     rate: usize,

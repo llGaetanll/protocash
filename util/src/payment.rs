@@ -1,5 +1,4 @@
-use ark_bls12_381::Fr as ConstraintF;
-use ark_crypto_primitives::crh::poseidon::constraints::CRHGadget as PoseidonCRHGadget;
+use ark_bls12_381::Fr as BlsFr;
 use ark_crypto_primitives::crh::CRHSchemeGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, eq::EqGadget};
@@ -7,8 +6,9 @@ use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_relations::r1cs::{ConstraintSystemRef, Result};
 
 use crate::merkletree::{
-    CoinCommitment, CoinCommitmentVar, Params, ParamsVar, Root, RootVar, TreePath, TreePathVar,
+    Params, ParamsVar, Root, RootVar, TreePath, TreePathVar,
 };
+use crate::poseidon::{BlsPoseidonGadget, CoinCommitment, CoinCommitmentVar};
 use crate::types::{Coin, CoinID};
 use crate::user::User;
 
@@ -37,8 +37,8 @@ pub struct PaymentProof {
     pub serial_number: CoinID,
 }
 
-impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
-    fn generate_constraints(self, cs: ConstraintSystemRef<ConstraintF>) -> Result<()> {
+impl ConstraintSynthesizer<BlsFr> for PaymentProof {
+    fn generate_constraints(self, cs: ConstraintSystemRef<BlsFr>) -> Result<()> {
         // public inputs
         let root = RootVar::new_input(ark_relations::ns!(cs, "merkle_root"), || Ok(self.root))?;
         let leaf = CoinCommitmentVar::new_input(ark_relations::ns!(cs, "merkle_leaf"), || {
@@ -78,7 +78,7 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
 
         // Of course, the commitment that we point to in the tree has to be made of the things we
         // claim it is.
-        let expected_commitment_hash = PoseidonCRHGadget::<ConstraintF>::evaluate(
+        let expected_commitment_hash = BlsPoseidonGadget::evaluate(
             &params,
             &[pk.clone(), pre_serial_number.clone(), com_rnd],
         )?;
@@ -89,11 +89,11 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
         //
         //    In this case, prf = Poseidon on `sk` and `pre_serial_number`.
         let expected_serial_number =
-            PoseidonCRHGadget::<ConstraintF>::evaluate(&params, &[sk.clone(), pre_serial_number])?;
+            BlsPoseidonGadget::evaluate(&params, &[sk.clone(), pre_serial_number])?;
         expected_serial_number.enforce_equal(&serial_number)?;
 
         // 3. We prove that `pk = H(sk)`
-        let expected_pk = PoseidonCRHGadget::<ConstraintF>::evaluate(&params, &[sk, noise])?;
+        let expected_pk = BlsPoseidonGadget::evaluate(&params, &[sk, noise])?;
         expected_pk.enforce_equal(&pk)?;
 
         Ok(())
@@ -104,12 +104,12 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
 mod test {
     use crate::{
         merkletree::{MerkleTree, Root, TreePath},
-        poseidon_native::{commitment, get_default_poseidon_parameters},
+        poseidon::{commitment, get_default_poseidon_parameters, BlsPoseidon},
         types::Coin,
         user::User,
     };
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-    use ark_crypto_primitives::crh::{poseidon::CRH as PoseidonCRH, CRHScheme};
+    use ark_crypto_primitives::crh::CRHScheme;
     use ark_groth16::{r1cs_to_qap::LibsnarkReduction, Groth16};
     use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
     use ark_snark::SNARK;
@@ -157,7 +157,7 @@ mod test {
         let path: TreePath = tree.generate_proof(index)?;
 
         let serial_number =
-            PoseidonCRH::<BlsFr>::evaluate(&params, [user.sk, coin.pre_serial_number])?;
+            BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         Ok(PaymentProof {
             params,
@@ -225,7 +225,7 @@ mod test {
 
         let user = User::new(&params, &mut rng)?;
         let serial_number =
-            PoseidonCRH::<BlsFr>::evaluate(&params, [user.sk, coin.pre_serial_number])?;
+            BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         let payment = PaymentProof {
             params,

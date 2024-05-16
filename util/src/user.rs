@@ -1,12 +1,12 @@
 use ark_bls12_381::Fr as BlsFr;
 use ark_crypto_primitives::{
-    crh::{poseidon::CRH as PoseidonCRH, CRHScheme},
+    crh::CRHScheme,
     Error as ArkError,
 };
 use ark_std::UniformRand;
 use rand::Rng;
 
-use crate::types::{Key, Rand};
+use crate::{poseidon::{BlsPoseidon, PoseidonParams}, types::{Key, Rand}};
 
 #[derive(Clone)]
 pub struct User {
@@ -20,14 +20,12 @@ pub struct User {
     pub noise: Rand,
 }
 
-type PoseidonParams = <PoseidonCRH<BlsFr> as CRHScheme>::Parameters;
-
 impl User {
     pub fn new<R: Rng>(params: &PoseidonParams, rng: &mut R) -> Result<Self, ArkError> {
         let sk = BlsFr::rand(rng);
         let noise = BlsFr::rand(rng);
 
-        let pk = PoseidonCRH::<BlsFr>::evaluate(params, [sk, noise])?;
+        let pk = BlsPoseidon::evaluate(params, [sk, noise])?;
 
         Ok(Self { pk, sk, noise })
     }
