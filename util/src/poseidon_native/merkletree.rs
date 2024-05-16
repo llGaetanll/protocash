@@ -4,16 +4,18 @@ use ark_crypto_primitives::{
     crh::{
         poseidon::{
             constraints::{
-                CRHGadget as PoseidonCRHGadget, TwoToOneCRHGadget as PoseidonTwoToOneCRHGadget,
+                CRHGadget as PoseidonCRHGadget, CRHParametersVar,
+                TwoToOneCRHGadget as PoseidonTwoToOneCRHGadget,
             },
             TwoToOneCRH as PoseidonTwoToOneCRH, CRH as PoseidonCRH,
         },
-        CRHScheme, CRHSchemeGadget, TwoToOneCRHScheme, TwoToOneCRHSchemeGadget,
+        TwoToOneCRHScheme, TwoToOneCRHSchemeGadget,
     },
     merkle_tree::{
         constraints::{ConfigGadget, PathVar},
         Config, MerkleTree as ArkMerkleTree, Path,
     },
+    sponge::poseidon::PoseidonConfig,
 };
 use ark_r1cs_std::fields::fp::FpVar;
 
@@ -78,15 +80,18 @@ pub type RootVar = <PoseidonTwoToOneCRHGadget<BlsFr> as TwoToOneCRHSchemeGadget<
     BlsFr,
 >>::OutputVar;
 
-pub type LeafParams = <PoseidonCRH<BlsFr> as CRHScheme>::Parameters;
-pub type LeafParamsVar =
-    <PoseidonCRHGadget<BlsFr> as CRHSchemeGadget<PoseidonCRH<BlsFr>, BlsFr>>::ParametersVar;
+pub type Params = PoseidonConfig<BlsFr>;
+pub type ParamsVar = CRHParametersVar<BlsFr>;
 
-pub type TwoToOneParams = <PoseidonTwoToOneCRH<BlsFr> as TwoToOneCRHScheme>::Parameters;
-pub type TwoToOneParamsVar = <PoseidonTwoToOneCRHGadget<BlsFr> as TwoToOneCRHSchemeGadget<
-    PoseidonTwoToOneCRH<BlsFr>,
-    BlsFr,
->>::ParametersVar;
+// pub type LeafParams = <PoseidonCRH<BlsFr> as CRHScheme>::Parameters;
+// pub type LeafParamsVar =
+//     <PoseidonCRHGadget<BlsFr> as CRHSchemeGadget<PoseidonCRH<BlsFr>, BlsFr>>::ParametersVar;
+//
+// pub type TwoToOneParams = <PoseidonTwoToOneCRH<BlsFr> as TwoToOneCRHScheme>::Parameters;
+// pub type TwoToOneParamsVar = <PoseidonTwoToOneCRHGadget<BlsFr> as TwoToOneCRHSchemeGadget<
+//     PoseidonTwoToOneCRH<BlsFr>,
+//     BlsFr,
+// >>::ParametersVar;
 
 pub type TreePath = Path<MerkleConfig>;
 pub type TreePathVar = PathVar<MerkleConfig, BlsFr, MerkleConfigVar>;

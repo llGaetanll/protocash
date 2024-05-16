@@ -1,18 +1,20 @@
 use ark_bls12_381::Fr as ConstraintF;
+use ark_crypto_primitives::crh::poseidon::constraints::CRHGadget as PoseidonCRHGadget;
+use ark_crypto_primitives::crh::CRHSchemeGadget;
+use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, eq::EqGadget};
 use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_relations::r1cs::{ConstraintSystemRef, Result};
 
 use crate::merkletree::{
-    CoinCommitment, CoinCommitmentVar, LeafParams, LeafParamsVar, Root, RootVar, TreePath,
-    TreePathVar, TwoToOneParams, TwoToOneParamsVar,
+    CoinCommitment, CoinCommitmentVar, Params, ParamsVar, Root, RootVar, TreePath, TreePathVar,
 };
-use crate::types::{Coin, CoinID, Key};
+use crate::types::{Coin, CoinID};
+use crate::user::User;
 
 #[derive(Clone)]
 pub struct PaymentProof {
-    leaf_crh_params: LeafParams,
-    two_to_one_crh_params: TwoToOneParams,
+    params: Params,
 
     // Public Inputs
     /// The root of the Merkle Tree
@@ -28,11 +30,11 @@ pub struct PaymentProof {
     /// The `Coin` we expect to match the commitment in the [`MerkleTree`].
     pub coin: Coin,
 
-    /// The user's secret key. We prove that `pk = H(sk)`.
-    pub sk: Key,
+    /// The [`User`] who the coin belongs to.
+    pub user: User,
 
     /// The serial number to be revealed by the user. We prove that `serial_no = prf(sk, pre_serial_no)`.
-    pub serial_no: CoinID,
+    pub serial_number: CoinID,
 }
 
 impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
@@ -48,46 +50,51 @@ impl ConstraintSynthesizer<ConstraintF> for PaymentProof {
         // A private witness of the path down the MerkleTree which leads to the commitment.
         let path =
             TreePathVar::new_witness(ark_relations::ns!(cs, "merkle_tree_path"), || Ok(self.path))?;
-        // let pk = FpVar::new_witness(ark_relations::ns!(cs, "pub_key"), || Ok(self.coin.pk))?;
+        let pk = FpVar::new_witness(ark_relations::ns!(cs, "pub_key"), || Ok(self.coin.pk))?;
+        let serial_number = FpVar::new_witness(ark_relations::ns!(cs, "serial_number"), || {
+            Ok(&self.serial_number)
+        })?;
+        let pre_serial_number =
+            FpVar::new_witness(ark_relations::ns!(cs, "pre_serial_number"), || {
+                Ok(&self.coin.pre_serial_number)
+            })?;
+        let com_rnd =
+            FpVar::new_witness(ark_relations::ns!(cs, "com_rnd"), || Ok(&self.coin.com_rnd))?;
 
-        // let pre_serial_no = UInt64::new_witness(ark_relations::ns!(cs, "pre_serial_no"), || {
-        //     Ok(&self.coin.pre_serial_no)
-        // })?;
-        // let com_rnd =
-        //     UInt64::new_witness(ark_relations::ns!(cs, "com_rnd"), || Ok(&self.coin.com_rnd))?;
-        //
-        // let sk = UInt64::new_witness(ark_relations::ns!(cs, "sec_key"), || Ok(&self.sk))?;
-        // let serial_no = FpVar::new_witness(ark_relations::ns!(cs, "serial_no"), || Ok(&self.serial_no))?;
-        let leaf_params = LeafParamsVar::new_constant(
-            ark_relations::ns!(cs, "leaf_params"),
-            self.leaf_crh_params,
-        )?;
-        let two_to_one_params = TwoToOneParamsVar::new_constant(
-            ark_relations::ns!(cs, "leaf_params"),
-            self.two_to_one_crh_params,
-        )?;
+        let sk = FpVar::new_witness(ark_relations::ns!(cs, "sec_key"), || Ok(&self.user.sk))?;
+        let noise =
+            FpVar::new_witness(ark_relations::ns!(cs, "key_noise"), || Ok(&self.user.noise))?;
+
+        let params =
+            ParamsVar::new_constant(ark_relations::ns!(cs, "poseidon_params"), self.params)?;
 
         // 1. We prove that we have a path down the MerkleTree that leads to a commitment which
         //    hashes to:
         //    - pk
         //    - pre_serial_no
         //    - com_rnd
-        let is_member = path.verify_membership(&leaf_params, &two_to_one_params, &root, &[leaf])?;
-
+        let is_member = path.verify_membership(&params, &params, &root, &[leaf.clone()])?;
         is_member.enforce_equal(&Boolean::TRUE)?;
 
-        // // 2. We enforce that `serial_no = prf(sk, pre_serial_no)`, so that the the payer can't lie
-        // //    to the payee
-        // let expected_serial_no = UInt64::new_constant(
-        //     ark_relations::ns!(cs, "expected_serial_no"),
-        //     f(self.sk, self.coin.pre_serial_number),
-        // )?;
+        // Of course, the commitment that we point to in the tree has to be made of the things we
+        // claim it is.
+        let expected_commitment_hash = PoseidonCRHGadget::<ConstraintF>::evaluate(
+            &params,
+            &[pk.clone(), pre_serial_number.clone(), com_rnd],
+        )?;
+        expected_commitment_hash.enforce_equal(&leaf)?;
+
+        // 2. We enforce that `serial_number = prf(sk, pre_serial_number)`, so that the the payer can't lie
+        //    to the payee
         //
-        // expected_serial_no.enforce_equal(&serial_no)?;
-        //
-        // // 3. We prove that `pk = H(sk)`
-        // let expected_pk = UInt64::new_constant(ark_relations::ns!(cs, "expected_pk"), h(self.sk))?;
-        // expected_pk.enforce_equal(&pk)?;
+        //    In this case, prf = Poseidon on `sk` and `pre_serial_number`.
+        let expected_serial_number =
+            PoseidonCRHGadget::<ConstraintF>::evaluate(&params, &[sk.clone(), pre_serial_number])?;
+        expected_serial_number.enforce_equal(&serial_number)?;
+
+        // 3. We prove that `pk = H(sk)`
+        let expected_pk = PoseidonCRHGadget::<ConstraintF>::evaluate(&params, &[sk, noise])?;
+        expected_pk.enforce_equal(&pk)?;
 
         Ok(())
     }
@@ -98,13 +105,14 @@ mod test {
     use crate::{
         merkletree::{MerkleTree, Root, TreePath},
         poseidon_native::{commitment, get_default_poseidon_parameters},
-        types::{Coin, CoinID, Key},
+        types::Coin,
+        user::User,
     };
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+    use ark_crypto_primitives::crh::{poseidon::CRH as PoseidonCRH, CRHScheme};
     use ark_groth16::{r1cs_to_qap::LibsnarkReduction, Groth16};
     use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
     use ark_snark::SNARK;
-    use ark_std::UniformRand;
     use std::error::Error;
 
     use super::PaymentProof;
@@ -126,7 +134,11 @@ mod test {
 
         assert!(range.contains(&index));
 
-        let coin = Coin::rand(&mut rng);
+        let user = User::new(&params, &mut rng)?;
+
+        let mut coin = Coin::rand(&mut rng);
+        coin.pk = user.pk;
+
         let commitment =
             commitment::new_commitment(&params, &coin).expect("failed to create commitment");
         let mut leaves: Vec<Vec<BlsFr>> = range
@@ -140,25 +152,21 @@ mod test {
 
         leaves[index] = vec![commitment];
 
-        let params = get_default_poseidon_parameters(rate, optimized_for_weights)
-            .expect("failed to build params for poseidon");
-
         let tree = MerkleTree::new(&params, &params, leaves)?;
         let root: Root = tree.root();
         let path: TreePath = tree.generate_proof(index)?;
 
-        let sk = Key::rand(&mut rng);
-        let serial_no = CoinID::rand(&mut rng);
+        let serial_number =
+            PoseidonCRH::<BlsFr>::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         Ok(PaymentProof {
-            leaf_crh_params: params.clone(),
-            two_to_one_crh_params: params,
+            params,
             root,
             commitment,
             path,
             coin,
-            sk,
-            serial_no,
+            user,
+            serial_number,
         })
     }
 
@@ -215,18 +223,18 @@ mod test {
         let root: Root = tree.root();
         let path: TreePath = tree.generate_proof(index + 1)?; // NOTE: wrong index on purpose
 
-        let sk = Key::rand(&mut rng);
-        let serial_no = CoinID::rand(&mut rng);
+        let user = User::new(&params, &mut rng)?;
+        let serial_number =
+            PoseidonCRH::<BlsFr>::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         let payment = PaymentProof {
-            leaf_crh_params: params.clone(),
-            two_to_one_crh_params: params,
+            params,
             root,
             commitment,
             path,
             coin,
-            sk,
-            serial_no,
+            user,
+            serial_number,
         };
 
         let cs = ConstraintSystem::new_ref();

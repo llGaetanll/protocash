@@ -1,8 +1,6 @@
 use ark_ff::{fields::models::*, BigInteger, PrimeField};
 
-use ark_crypto_primitives::sponge::poseidon::{
-    PoseidonConfig, PoseidonDefaultConfig, PoseidonDefaultConfigEntry,
-};
+use ark_crypto_primitives::sponge::poseidon::{PoseidonConfig, PoseidonDefaultConfigEntry};
 
 pub mod commitment;
 mod digest;
