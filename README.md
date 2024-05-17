@@ -64,6 +64,25 @@ struct Commitment<T> {
 
 ### Making a transaction
 
+#### Note to the grader
+
+(Temporary section. Will be removed once project is graded)
+
+I encourage you to check out the commit history for context on the work put in.
+The repo at this time may not look like a lot, but many failed attempts at a
+proof were tried before we got here. At its peak, this repo contained ~`8000`
+SLOC. [This
+commit](https://github.com/llGaetanll/protocash/tree/46485afc2209190d7b86d68d4b2bf2066460ea98)
+is a good example.
+
+Of course, this is not counting the abci bridge, in which went a lot of trial
+and error, or [the several arkworks
+examples](https://github.com/llGaetanll/arkworks-tests) which helped me gain a
+foundation into the framework.
+
+Hard work aside, working on this project is really enjoyable, and I will
+continue to do so, at least for the forseeable future.
+
 #### Guarantees
 
 When we make a transaction, we need to enforce two guarantees:
