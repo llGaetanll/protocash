@@ -33,6 +33,7 @@ In this repo you will find three crates.
   `protocash-client`.
 
 ## How to run
+(you may want to check that rust is up to date.)
 
 1. Start a node
 
@@ -49,6 +50,15 @@ In this repo you will find three crates.
   ```
   cargo run --release
   ```
+
+You may also want to run the test. `util` contains various tests for the payment
+proof. You can run
+
+```
+cargo test --release
+```
+
+from the root directory to see these results
 
 You should see the `client` make a connection to the `node` over the ABCI.
 
