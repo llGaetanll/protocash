@@ -120,25 +120,25 @@ Public inputs are:
 - `c`: The coin commitment owned by `A`
 - `s`: The serial number
 
-##### Questions
-
-1. Assuming that users keep their `pre_serial_number`s private, what's the point
-   of `com_rnd`? People still can't open commitments unless they know *both* the
-   public key and the `pre_serial_number` associated with the commitment.
-
-2. If `A` pays `B` via a commitment `c'`, I now completely understand how *both*
-   `A` and `B` are able to open `c'`, but how *only* `B` can spend it. 
-
-   My issue now is with `A` tracking when `B` spends `c'`. When `B` wants to spend
-   `c'`, it makes a proof that it knows `c'` and that `pk_B = H(sk_B)`. So far so
-   good. The problem now is that `B` needs to reveal a serial_number to avoid
-   the double spending problem.
-
-   - If `B` reveals `pre_serial_number'`, then of course `A` knows it, and so `A`
-     can track `B`.
-
-   - If `B` reveals `sn' = prf(sk_B, pre_serial_number')`, I now worry that, if `B`
-     has evil intentions, it could lie and reveal a made-up serial number `sn'`
-     everytime, and so re-use `c'` over and over again. After all, `B` is the only
-     one to know `sk_B`, so it could pass off `sn_i = prf(sk_B, pre_serial_number_i)`
-     as just a different and made-up `pre_serial_number_i` everytime.
+<!-- ##### Questions -->
+<!---->
+<!-- 1. Assuming that users keep their `pre_serial_number`s private, what's the point -->
+<!--    of `com_rnd`? People still can't open commitments unless they know *both* the -->
+<!--    public key and the `pre_serial_number` associated with the commitment. -->
+<!---->
+<!-- 2. If `A` pays `B` via a commitment `c'`, I now completely understand how *both* -->
+<!--    `A` and `B` are able to open `c'`, but how *only* `B` can spend it.  -->
+<!---->
+<!--    My issue now is with `A` tracking when `B` spends `c'`. When `B` wants to spend -->
+<!--    `c'`, it makes a proof that it knows `c'` and that `pk_B = H(sk_B)`. So far so -->
+<!--    good. The problem now is that `B` needs to reveal a serial_number to avoid -->
+<!--    the double spending problem. -->
+<!---->
+<!--    - If `B` reveals `pre_serial_number'`, then of course `A` knows it, and so `A` -->
+<!--      can track `B`. -->
+<!---->
+<!--    - If `B` reveals `sn' = prf(sk_B, pre_serial_number')`, I now worry that, if `B` -->
+<!--      has evil intentions, it could lie and reveal a made-up serial number `sn'` -->
+<!--      everytime, and so re-use `c'` over and over again. After all, `B` is the only -->
+<!--      one to know `sk_B`, so it could pass off `sn_i = prf(sk_B, pre_serial_number_i)` -->
+<!--      as just a different and made-up `pre_serial_number_i` everytime. -->
