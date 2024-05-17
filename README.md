@@ -2,6 +2,8 @@
 
 ## Note to the grader
 
+Group members: Gaetan Almela, Michael Gardiner, William James, Ethan Yu
+
 (Temporary section. Will be removed once project is graded)
 
 I encourage you to check out the commit history for context on the work put in!
