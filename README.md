@@ -1,5 +1,9 @@
 # Protocash
 
+Protocash is a [layer 1](https://www.investopedia.com/what-are-layer-1-and-layer-2-blockchain-scaling-solutions-7104877)
+cryptocurrency running on top of [cometbft](https://cometbft.com/) with a focus on privacy and speed. All transactions on protocash are done in
+[zero-knowledge](https://en.wikipedia.org/wiki/Zero-knowledge_proof) using [`arkworks`](https://arkworks.rs/).
+
 ## Project Structure
 
 In this repo you will find three crates.
