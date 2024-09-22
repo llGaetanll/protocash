@@ -24,10 +24,10 @@ pub struct PaymentProof {
     pub commitment: CoinCommitment,
 
     // Private Witnesses
-    /// The path down the [`MerkleTree`] which leads to `leaf`.
+    /// The path down the `MerkleTree` which leads to `leaf`.
     pub path: TreePath,
 
-    /// The `Coin` we expect to match the commitment in the [`MerkleTree`].
+    /// The `Coin` we expect to match the commitment in the `MerkleTree`.
     pub coin: Coin,
 
     /// The [`User`] who the coin belongs to.
