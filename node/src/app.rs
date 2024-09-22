@@ -15,6 +15,8 @@ use cometbft::abci::v1::response::VerifyVoteExtension;
 use cometbft::abci::Code;
 use cometbft::validator::Update;
 use cometbft::PublicKey;
+use sha2::Digest;
+use sha2::Sha256;
 use tower::Service;
 use tower_abci::BoxError;
 
@@ -24,31 +26,24 @@ pub struct State {
     ongoingblock: HashMap<i32, i32>,
     size: u32,
     height: u32,
-    hash: Vec<u8>,
-}
-
-pub enum TxError {
-    AlreadySpent,
 }
 
 impl State {
     fn hash(&self) -> Vec<u8> {
-        todo!()
+        let hasher = Sha256::new();
 
-        // let hasher = Sha256::new();
-        //
-        // let bytes: Vec<u8> = self
-        //     .store
-        //     .iter()
-        //     .flat_map(|(k, v)| k.bytes().chain(v.bytes()))
-        //     .collect();
-        //
-        // let hasher = hasher
-        //     .chain_update(bytes.as_slice()) // add the store
-        //     .chain_update(self.height.to_ne_bytes()) // add the height
-        //     .chain_update(self.size.to_ne_bytes()); // add the size
-        //
-        // hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
+        let bytes: Vec<u8> = self
+            .store
+            .iter()
+            .flat_map(|(k, v)| k.to_be_bytes().into_iter().chain(v.to_be_bytes()))
+            .collect();
+
+        let hasher = hasher
+            .chain_update(bytes.as_slice()) // add the store
+            .chain_update(self.height.to_ne_bytes()) // add the height
+            .chain_update(self.size.to_ne_bytes()); // add the size
+
+        hasher.finalize().to_vec() // TODO: should be [u8; 32] for SHA256
     }
 }
 
@@ -98,8 +93,8 @@ impl Application {
         // TODO
 
         response::Info {
-            data: String::from("498c-protocash"),
-            version: String::from("0.1.0"),
+            data: String::from("protocash"),
+            version: String::from("0.0.0"),
             app_version: 1,
             last_block_height: self.state.height.into(),
             last_block_app_hash: self.state.hash().try_into().unwrap(),
@@ -107,41 +102,71 @@ impl Application {
     }
 
     fn is_valid(tx: &Bytes) -> Code {
+        match Self::parse_kv(tx) {
+            Some(_) => Code::Ok,
+            None => Code::Err(unsafe { NonZeroU32::new_unchecked(1) })
+        }
+    }
+
+    fn parse_kv(tx: &Bytes) -> Option<(i32, i32)> {
         let tx_str = String::from_utf8_lossy(tx);
 
-        match TryInto::<[&str; 2]>::try_into(tx_str.split('=').collect::<Vec<_>>()) {
-            Ok([left, right]) => {
-                if left.parse::<i32>().is_ok() && right.parse::<i32>().is_ok() {
-                    Code::Ok
-                } else {
-                    Code::Err(unsafe { NonZeroU32::new_unchecked(1) })
-                }
-            }
-            _ => Code::Err(unsafe { NonZeroU32::new_unchecked(1) }),
-        }
+        tx_str
+            .split('=')
+            .collect::<Vec<_>>()
+            .try_into()
+            .ok()
+            .and_then(|[k, v]: [&str; 2]| k.parse::<i32>().ok().zip(v.parse::<i32>().ok()))
     }
 
     fn query(&self, query: request::Query) -> response::Query {
         let request::Query {
-            data: _data,
+            data,
             path: _path,
             height,
             prove: _prove,
         } = query;
 
-        let key = 1;
-        let value = self.state.store.get(&key).unwrap_or(&1);
+        let data_slice: &[u8] = &data;
+        if let Ok(key_bytes) = TryInto::<[u8; 4]>::try_into(data_slice) {
+            let key = i32::from_be_bytes(key_bytes);
 
-        response::Query {
-            code: Code::Ok,
-            log: String::from("exists"),
-            info: String::new(),
-            index: 0,
-            key: Bytes::copy_from_slice(&key.to_be_bytes()),
-            value: Bytes::copy_from_slice(&value.to_be_bytes()),
-            proof: None,
-            height,
-            codespace: String::new(),
+            match self.state.store.get(&key) {
+                Some(value) => response::Query {
+                    code: Code::Ok,
+                    log: String::new(),
+                    info: String::new(),
+                    index: 0,
+                    key: Bytes::copy_from_slice(&value.to_be_bytes()),
+                    value: data,
+                    proof: None,
+                    height,
+                    codespace: String::new(),
+                },
+                None => response::Query {
+                    code: Code::Err(unsafe { NonZeroU32::new_unchecked(1) }),
+                    log: format!("Key {} not found", key),
+                    info: String::from("Key not found"),
+                    index: 0,
+                    key: Bytes::new(),
+                    value: data,
+                    proof: None,
+                    height,
+                    codespace: String::new(),
+                },
+            }
+        } else {
+            response::Query {
+                code: Code::Err(unsafe { NonZeroU32::new_unchecked(1) }),
+                log: String::from("Invalid query"),
+                info: String::from("Invalid query"),
+                index: 0,
+                key: Bytes::new(),
+                value: Bytes::new(),
+                proof: None,
+                height,
+                codespace: String::new(),
+            }
         }
     }
 
@@ -164,19 +189,16 @@ impl Application {
         let mut tx_results: Vec<ExecTxResult> = Vec::with_capacity(txs.len());
 
         for tx in txs {
-            let code = Self::is_valid(&tx);
+            let code = match Self::parse_kv(&tx) {
+                Some((k, v)) => {
+                    self.state.ongoingblock.insert(k, v);
 
-            if let Code::Ok = code {
-                let s = String::from_utf8_lossy(&tx);
-
-                // TODO: redundant logic with is_valid
-                let [k, v]: [&str; 2] = s.split('=').collect::<Vec<_>>().try_into().unwrap(); // won't fail since valid
-
-                // won't fail because of is_valid
-                self.state
-                    .store
-                    .insert(k.parse().unwrap(), v.parse().unwrap());
-            }
+                    Code::Ok
+                }
+                None => {
+                    Code::Err(unsafe { NonZeroU32::new_unchecked(1) })
+                }
+            };
 
             tx_results.push(ExecTxResult {
                 code,
@@ -238,14 +260,20 @@ impl Service<Request> for Application {
             Request::Info(info) => Response::Info(self.info(info)),
             Request::Query(query) => Response::Query(self.query(query)),
             Request::CheckTx(check_tx) => Response::CheckTx(Self::check_tx(check_tx)),
-            Request::PrepareProposal(proposal) => Response::PrepareProposal(Self::prepare_proposal(proposal)),
-            Request::ProcessProposal(proposal) => Response::ProcessProposal(Self::process_proposal(proposal)),
+            Request::PrepareProposal(proposal) => {
+                Response::PrepareProposal(Self::prepare_proposal(proposal))
+            }
+            Request::ProcessProposal(proposal) => {
+                Response::ProcessProposal(Self::process_proposal(proposal))
+            }
             Request::FinalizeBlock(block) => Response::FinalizeBlock(self.finalize_block(block)),
             Request::Commit => Response::Commit(self.commit()),
 
             Request::Flush => Response::Flush,
             Request::InitChain(_) => Response::InitChain(Default::default()),
-            Request::Echo(echo) => Response::Echo(Echo { message: echo.message }),
+            Request::Echo(echo) => Response::Echo(Echo {
+                message: echo.message,
+            }),
 
             Request::ListSnapshots => Response::ListSnapshots(Default::default()),
             Request::OfferSnapshot(_) => Response::ListSnapshots(Default::default()),
