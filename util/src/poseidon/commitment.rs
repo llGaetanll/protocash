@@ -1,13 +1,12 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{
-    crh::CRHScheme,
-    Error as ArkError,
-};
+use ark_crypto_primitives::crh::CRHScheme;
+use ark_crypto_primitives::Error as ArkError;
 use rand::Rng;
 
+use super::BlsPoseidon;
+use super::CoinCommitment;
+use super::PoseidonParams;
 use crate::types::Coin;
-
-use super::{BlsPoseidon, CoinCommitment, PoseidonParams};
 
 pub fn new_commitment(
     parameters: &PoseidonParams,

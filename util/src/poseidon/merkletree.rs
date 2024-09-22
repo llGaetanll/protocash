@@ -1,22 +1,26 @@
-use super::{digest::{PoseidonDigest, PoseidonDigestVar}, CRHInput, CRHInputVar, CRHOutput, CRHOutputVar, TwoToOneCRHOutput, TwoToOneCRHOutputVar};
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{
-    crh::{
-        poseidon::{
-            constraints::{
-                CRHGadget as PoseidonCRHGadget, CRHParametersVar,
-                TwoToOneCRHGadget as PoseidonTwoToOneCRHGadget,
-            },
-            TwoToOneCRH as PoseidonTwoToOneCRH, CRH as PoseidonCRH,
-        },
-        TwoToOneCRHScheme, TwoToOneCRHSchemeGadget,
-    },
-    merkle_tree::{
-        constraints::{ConfigGadget, PathVar},
-        Config, MerkleTree as ArkMerkleTree, Path,
-    },
-    sponge::poseidon::PoseidonConfig,
-};
+use ark_crypto_primitives::crh::poseidon::constraints::CRHGadget as PoseidonCRHGadget;
+use ark_crypto_primitives::crh::poseidon::constraints::CRHParametersVar;
+use ark_crypto_primitives::crh::poseidon::constraints::TwoToOneCRHGadget as PoseidonTwoToOneCRHGadget;
+use ark_crypto_primitives::crh::poseidon::TwoToOneCRH as PoseidonTwoToOneCRH;
+use ark_crypto_primitives::crh::poseidon::CRH as PoseidonCRH;
+use ark_crypto_primitives::crh::TwoToOneCRHScheme;
+use ark_crypto_primitives::crh::TwoToOneCRHSchemeGadget;
+use ark_crypto_primitives::merkle_tree::constraints::ConfigGadget;
+use ark_crypto_primitives::merkle_tree::constraints::PathVar;
+use ark_crypto_primitives::merkle_tree::Config;
+use ark_crypto_primitives::merkle_tree::MerkleTree as ArkMerkleTree;
+use ark_crypto_primitives::merkle_tree::Path;
+use ark_crypto_primitives::sponge::poseidon::PoseidonConfig;
+
+use super::digest::PoseidonDigest;
+use super::digest::PoseidonDigestVar;
+use super::CRHInput;
+use super::CRHInputVar;
+use super::CRHOutput;
+use super::CRHOutputVar;
+use super::TwoToOneCRHOutput;
+use super::TwoToOneCRHOutputVar;
 
 #[derive(Clone)]
 pub struct MerkleConfig;

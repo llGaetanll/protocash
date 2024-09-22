@@ -1,11 +1,13 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::crh::{poseidon::{CRH as PoseidonCRH, constraints::CRHGadget as PoseidonCRHGadget}, CRHScheme};
+use ark_crypto_primitives::crh::poseidon::constraints::CRHGadget as PoseidonCRHGadget;
+use ark_crypto_primitives::crh::poseidon::CRH as PoseidonCRH;
+use ark_crypto_primitives::crh::CRHScheme;
 use ark_r1cs_std::fields::fp::FpVar;
 
-mod digest;
-mod util;
 pub mod commitment;
+mod digest;
 pub mod merkletree;
+mod util;
 
 pub type BlsPoseidon = PoseidonCRH<BlsFr>;
 pub type BlsPoseidonGadget = PoseidonCRHGadget<BlsFr>;

@@ -1,10 +1,12 @@
-use ark_crypto_primitives::{
-    merkle_tree::{constraints::DigestVarConverter, DigestConverter},
-    Error as ArkError,
-};
+use ark_crypto_primitives::merkle_tree::constraints::DigestVarConverter;
+use ark_crypto_primitives::merkle_tree::DigestConverter;
+use ark_crypto_primitives::Error as ArkError;
 use ark_relations::r1cs::SynthesisError;
 
-use super::{CRHOutput, CRHOutputVar, TwoToOneCRHInput, TwoToOneCRHInputVar};
+use super::CRHOutput;
+use super::CRHOutputVar;
+use super::TwoToOneCRHInput;
+use super::TwoToOneCRHInputVar;
 
 pub struct PoseidonDigest;
 impl DigestConverter<CRHOutput, TwoToOneCRHInput> for PoseidonDigest {

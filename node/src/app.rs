@@ -4,24 +4,19 @@ use std::future::Future;
 use std::pin::Pin;
 
 use bytes::Bytes;
-
-use rand::Rng;
-
-use cometbft::validator::Update;
-use cometbft::PublicKey;
-use tower::Service;
-use tower_abci::BoxError;
-
 use cometbft::abci::v1::request::Request;
 use cometbft::abci::v1::response;
-use cometbft::abci::v1::response::Response;
-
 use cometbft::abci::v1::response::ExtendVote;
 use cometbft::abci::v1::response::FinalizeBlock;
 use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
+use cometbft::abci::v1::response::Response;
 use cometbft::abci::v1::response::VerifyVoteExtension;
-
+use cometbft::validator::Update;
+use cometbft::PublicKey;
+use rand::Rng;
+use tower::Service;
+use tower_abci::BoxError;
 use util::types::CoinCommitment;
 use util::types::CoinID;
 

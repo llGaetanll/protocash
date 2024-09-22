@@ -1,15 +1,24 @@
 use ark_bls12_381::Fr as BlsFr;
 use ark_crypto_primitives::crh::CRHSchemeGadget;
+use ark_r1cs_std::alloc::AllocVar;
+use ark_r1cs_std::boolean::Boolean;
+use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
-use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, eq::EqGadget};
 use ark_relations::r1cs::ConstraintSynthesizer;
-use ark_relations::r1cs::{ConstraintSystemRef, Result};
+use ark_relations::r1cs::ConstraintSystemRef;
+use ark_relations::r1cs::Result;
 
-use crate::merkletree::{
-    Params, ParamsVar, Root, RootVar, TreePath, TreePathVar,
-};
-use crate::poseidon::{BlsPoseidonGadget, CoinCommitment, CoinCommitmentVar};
-use crate::types::{Coin, CoinID};
+use crate::merkletree::Params;
+use crate::merkletree::ParamsVar;
+use crate::merkletree::Root;
+use crate::merkletree::RootVar;
+use crate::merkletree::TreePath;
+use crate::merkletree::TreePathVar;
+use crate::poseidon::BlsPoseidonGadget;
+use crate::poseidon::CoinCommitment;
+use crate::poseidon::CoinCommitmentVar;
+use crate::types::Coin;
+use crate::types::CoinID;
 use crate::user::User;
 
 #[derive(Clone)]
@@ -102,21 +111,27 @@ impl ConstraintSynthesizer<BlsFr> for PaymentProof {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        merkletree::{MerkleTree, Root, TreePath},
-        poseidon::{commitment, get_default_poseidon_parameters, BlsPoseidon},
-        types::Coin,
-        user::User,
-    };
-    use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-    use ark_crypto_primitives::crh::CRHScheme;
-    use ark_groth16::{r1cs_to_qap::LibsnarkReduction, Groth16};
-    use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
-    use ark_snark::SNARK;
     use std::error::Error;
 
-    use super::PaymentProof;
+    use ark_bls12_381::Bls12_381;
+    use ark_bls12_381::Fr as BlsFr;
+    use ark_crypto_primitives::crh::CRHScheme;
+    use ark_groth16::r1cs_to_qap::LibsnarkReduction;
+    use ark_groth16::Groth16;
+    use ark_relations::r1cs::ConstraintSynthesizer;
+    use ark_relations::r1cs::ConstraintSystem;
+    use ark_snark::SNARK;
     use rand;
+
+    use super::PaymentProof;
+    use crate::merkletree::MerkleTree;
+    use crate::merkletree::Root;
+    use crate::merkletree::TreePath;
+    use crate::poseidon::commitment;
+    use crate::poseidon::get_default_poseidon_parameters;
+    use crate::poseidon::BlsPoseidon;
+    use crate::types::Coin;
+    use crate::user::User;
 
     pub fn generate_new_payment(
         index: usize,
@@ -156,8 +171,7 @@ mod test {
         let root: Root = tree.root();
         let path: TreePath = tree.generate_proof(index)?;
 
-        let serial_number =
-            BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
+        let serial_number = BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         Ok(PaymentProof {
             params,
@@ -224,8 +238,7 @@ mod test {
         let path: TreePath = tree.generate_proof(index + 1)?; // NOTE: wrong index on purpose
 
         let user = User::new(&params, &mut rng)?;
-        let serial_number =
-            BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
+        let serial_number = BlsPoseidon::evaluate(&params, [user.sk, coin.pre_serial_number])?;
 
         let payment = PaymentProof {
             params,

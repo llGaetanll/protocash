@@ -1,10 +1,18 @@
-use bytes::{BufMut, BytesMut};
-use cometbft_proto::abci::v1::{request::Value, FlushRequest, InfoRequest, Request};
-use prost::Message;
-use std::{error::Error, thread, time::Duration};
-use tokio::{io::AsyncWriteExt, net::TcpStream};
+use std::error::Error;
+use std::thread;
+use std::time::Duration;
 
-use util::types::{CoinCommitment, Key};
+use bytes::BufMut;
+use bytes::BytesMut;
+use cometbft_proto::abci::v1::request::Value;
+use cometbft_proto::abci::v1::FlushRequest;
+use cometbft_proto::abci::v1::InfoRequest;
+use cometbft_proto::abci::v1::Request;
+use prost::Message;
+use tokio::io::AsyncWriteExt;
+use tokio::net::TcpStream;
+use util::types::CoinCommitment;
+use util::types::Key;
 
 async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<dyn Error>> {
     let mut buf = BytesMut::new();

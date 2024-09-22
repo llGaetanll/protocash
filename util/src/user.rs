@@ -1,12 +1,13 @@
 use ark_bls12_381::Fr as BlsFr;
-use ark_crypto_primitives::{
-    crh::CRHScheme,
-    Error as ArkError,
-};
+use ark_crypto_primitives::crh::CRHScheme;
+use ark_crypto_primitives::Error as ArkError;
 use ark_std::UniformRand;
 use rand::Rng;
 
-use crate::{poseidon::{BlsPoseidon, PoseidonParams}, types::{Key, Rand}};
+use crate::poseidon::BlsPoseidon;
+use crate::poseidon::PoseidonParams;
+use crate::types::Key;
+use crate::types::Rand;
 
 #[derive(Clone)]
 pub struct User {

@@ -1,6 +1,8 @@
-use ark_ff::{fields::models::*, BigInteger, PrimeField};
-
-use ark_crypto_primitives::sponge::poseidon::{PoseidonConfig, PoseidonDefaultConfigEntry};
+use ark_crypto_primitives::sponge::poseidon::PoseidonConfig;
+use ark_crypto_primitives::sponge::poseidon::PoseidonDefaultConfigEntry;
+use ark_ff::fields::models::*;
+use ark_ff::BigInteger;
+use ark_ff::PrimeField;
 
 const PARAMS_OPT_FOR_CONSTRAINTS: [PoseidonDefaultConfigEntry; 7] = [
     PoseidonDefaultConfigEntry::new(2, 17, 8, 31, 0),

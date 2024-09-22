@@ -1,6 +1,5 @@
 use clap::arg;
 use clap::Parser;
-
 use tower::ServiceBuilder;
 use tower_abci::split;
 use tower_abci::Server;
