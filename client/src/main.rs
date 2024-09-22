@@ -4,7 +4,7 @@ use prost::Message;
 use std::{error::Error, thread, time::Duration};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use protocash_util::types::{CoinCommitment, Key};
+use util::types::{CoinCommitment, Key};
 
 async fn write_request(stream: &mut TcpStream, req: Request) -> Result<(), Box<dyn Error>> {
     let mut buf = BytesMut::new();

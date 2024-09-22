@@ -674,6 +674,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
 
 [[package]]
+name = "client"
+version = "0.1.0"
+dependencies = [
+ "ark-bls12-381 0.3.0",
+ "ark-crypto-primitives 0.3.0",
+ "ark-ec 0.3.0",
+ "ark-ed-on-bls12-381 0.3.0",
+ "ark-ff 0.3.0",
+ "ark-r1cs-std 0.3.1",
+ "ark-relations 0.3.0",
+ "ark-serialize 0.3.0",
+ "ark-snark 0.3.0",
+ "ark-std 0.3.0",
+ "bytes",
+ "cometbft",
+ "cometbft-proto",
+ "prost",
+ "tokio",
+ "tower",
+ "tower-abci",
+ "util",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1205,6 +1229,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "node"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "clap",
+ "cometbft",
+ "rand",
+ "sha2 0.10.8",
+ "tokio",
+ "tower",
+ "tower-abci",
+ "tracing",
+ "tracing-subscriber 0.3.18",
+ "util",
+]
+
+[[package]]
 name = "nu-ansi-term"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1441,69 +1482,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3235c33eb02c1f1e212abdbe34c78b264b038fb58ca612664343271e36e55ffe"
 dependencies = [
  "prost",
-]
-
-[[package]]
-name = "protocash-client"
-version = "0.1.0"
-dependencies = [
- "ark-bls12-381 0.3.0",
- "ark-crypto-primitives 0.3.0",
- "ark-ec 0.3.0",
- "ark-ed-on-bls12-381 0.3.0",
- "ark-ff 0.3.0",
- "ark-r1cs-std 0.3.1",
- "ark-relations 0.3.0",
- "ark-serialize 0.3.0",
- "ark-snark 0.3.0",
- "ark-std 0.3.0",
- "bytes",
- "cometbft",
- "cometbft-proto",
- "prost",
- "protocash-util",
- "tokio",
- "tower",
- "tower-abci",
-]
-
-[[package]]
-name = "protocash-node"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "clap",
- "cometbft",
- "protocash-util",
- "rand",
- "sha2 0.10.8",
- "tokio",
- "tower",
- "tower-abci",
- "tracing",
- "tracing-subscriber 0.3.18",
-]
-
-[[package]]
-name = "protocash-util"
-version = "0.1.0"
-dependencies = [
- "ark-bls12-381 0.4.0",
- "ark-crypto-primitives 0.4.0",
- "ark-ec 0.4.2",
- "ark-ed-on-bls12-381 0.4.0",
- "ark-ff 0.4.2",
- "ark-groth16",
- "ark-r1cs-std 0.4.0",
- "ark-relations 0.4.0",
- "ark-serialize 0.4.2",
- "ark-snark 0.4.0",
- "ark-std 0.4.0",
- "hex",
- "lazy_static",
- "rand",
- "tracing",
- "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -2213,6 +2191,28 @@ name = "utf8parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
+
+[[package]]
+name = "util"
+version = "0.1.0"
+dependencies = [
+ "ark-bls12-381 0.4.0",
+ "ark-crypto-primitives 0.4.0",
+ "ark-ec 0.4.2",
+ "ark-ed-on-bls12-381 0.4.0",
+ "ark-ff 0.4.2",
+ "ark-groth16",
+ "ark-r1cs-std 0.4.0",
+ "ark-relations 0.4.0",
+ "ark-serialize 0.4.2",
+ "ark-snark 0.4.0",
+ "ark-std 0.4.0",
+ "hex",
+ "lazy_static",
+ "rand",
+ "tracing",
+ "tracing-subscriber 0.2.25",
+]
 
 [[package]]
 name = "valuable"

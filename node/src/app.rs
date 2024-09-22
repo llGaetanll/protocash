@@ -22,8 +22,8 @@ use cometbft::abci::v1::response::PrepareProposal;
 use cometbft::abci::v1::response::ProcessProposal;
 use cometbft::abci::v1::response::VerifyVoteExtension;
 
-use protocash_util::types::CoinCommitment;
-use protocash_util::types::CoinID;
+use util::types::CoinCommitment;
+use util::types::CoinID;
 
 #[derive(Default)]
 pub struct State {
