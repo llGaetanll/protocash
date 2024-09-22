@@ -1235,6 +1235,7 @@ dependencies = [
  "bytes",
  "clap",
  "cometbft",
+ "cometbft-proto",
  "rand",
  "sha2 0.10.8",
  "tokio",

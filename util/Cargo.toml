@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rand = { workspace = true }
+
 ark-ff = "0.4.0"
 ark-std = "0.4.0"
 ark-snark = "0.4.0"
@@ -18,7 +20,6 @@ ark-relations = { version = "0.4.0", features = ["tracing-subscriber"] }
 ark-r1cs-std = { version = "0.4.0", default-features = false }
 ark-serialize = { version = "0.4.0", default-features = false }
 
-rand = "0.8.5"
 lazy_static = "1.4.0"
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
 
