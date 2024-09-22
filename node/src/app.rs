@@ -81,24 +81,23 @@ impl Application {
     // returns a 0 appBlockHeight, CometBFT will call InitChain to initialize the application
     // with consensus related data
     fn info(&self, info: request::Info) -> response::Info {
-        let request::Info {
-            version,
-            block_version,
-            p2p_version,
-            abci_version,
-        } = info;
+        tracing::debug!("Info");
 
-        // CometBFT expects the application to persist validators. On startup, we need to load them
-        // if they exist.
-        // TODO
+        // TODO: CometBFT expects the application to persist validators.
+        // On startup, we need to load them if they exist.
+        tracing::trace!(info = ?info);
 
-        response::Info {
+        let res = response::Info {
             data: String::from("protocash"),
             version: String::from("0.0.0"),
             app_version: 1,
             last_block_height: self.state.height.into(),
             last_block_app_hash: self.state.hash().try_into().unwrap(),
-        }
+        };
+
+        tracing::trace!(res = ?res);
+
+        res
     }
 
     fn is_valid(tx: &Bytes) -> Code {
@@ -120,6 +119,10 @@ impl Application {
     }
 
     fn query(&self, query: request::Query) -> response::Query {
+        tracing::debug!("Query");
+
+        tracing::trace!(?query);
+
         let request::Query {
             data,
             path: _path,
@@ -128,8 +131,10 @@ impl Application {
         } = query;
 
         let data_slice: &[u8] = &data;
-        if let Ok(key_bytes) = TryInto::<[u8; 4]>::try_into(data_slice) {
+        let res = if let Ok(key_bytes) = TryInto::<[u8; 4]>::try_into(data_slice) {
             let key = i32::from_be_bytes(key_bytes);
+
+            tracing::trace!(?key_bytes, key);
 
             match self.state.store.get(&key) {
                 Some(value) => response::Query {
@@ -167,7 +172,11 @@ impl Application {
                 height,
                 codespace: String::new(),
             }
-        }
+        };
+
+        tracing::trace!(?res);
+
+        res
     }
 
     fn check_tx(tx: request::CheckTx) -> response::CheckTx {
@@ -176,14 +185,20 @@ impl Application {
             kind: _kind,
         } = tx;
 
-        response::CheckTx {
+        let res = response::CheckTx {
             code: Self::is_valid(&data),
             data,
             ..Default::default()
-        }
+        };
+
+        tracing::trace!(?res);
+
+        res
     }
 
     fn finalize_block(&mut self, block: request::FinalizeBlock) -> response::FinalizeBlock {
+        tracing::debug!("Finalizing Block");
+
         let request::FinalizeBlock { txs, .. } = block;
 
         let mut tx_results: Vec<ExecTxResult> = Vec::with_capacity(txs.len());
@@ -227,9 +242,15 @@ impl Application {
     }
 
     fn commit(&mut self) -> response::Commit {
+        tracing::debug!("Committing");
+
+        tracing::trace!(?self.state.ongoingblock);
+
         self.state
             .store
-            .extend(self.state.ongoingblock.iter().map(|(k, v)| (*k, *v)));
+            .extend(self.state.ongoingblock.drain());
+
+        tracing::trace!(?self.state.store);
 
         response::Commit {
             data: Bytes::new(), // ignored since v0.38
@@ -256,6 +277,8 @@ impl Service<Request> for Application {
     }
 
     fn call(&mut self, req: Request) -> Self::Future {
+        tracing::debug!(?req);
+
         let res = match req {
             Request::Info(info) => Response::Info(self.info(info)),
             Request::Query(query) => Response::Query(self.query(query)),
