@@ -7,52 +7,51 @@ cryptocurrency running on top of [cometbft](https://cometbft.com/) with a focus 
 ## Project Structure
 
 In this repo you will find three crates.
-- `protocash-node`: A binary used by nodes on the network to validate
+- `node`: A binary used by nodes on the network to validate
    transactions.
-- `protocash-client`: A binary used by clients to transact to other clients.
-  The transactions are checked by nodes running `protocash-node`.
-- `protocash-util`: A library of shared utilities between `protocash-node` and
-  `protocash-client`.
+- `client`: A binary used by clients to transact to other clients.
+  The transactions are checked by nodes running `node`.
+- `util`: A library of shared utilities between `node` and `client`.
 
-## How to run
+## Getting Started
 (you may want to check that rust is up to date.)
+
+In two separate shells,
 
 1. Start a node
 
-  Inside of `node`, run
+  From the root of the project, run
 
   ```
-  cargo run --release
+  cargo run --release -p node
   ```
 
 2. Start a client
 
-  Inside of `client`, run
+  From the root of the project, run
 
   ```
-  cargo run --release
+  cargo run --release -p client
   ```
 
-You may also want to run the test. `util` contains various tests for the payment
-proof. You can run
+You should see the `client` make a connection to the `node` over the ABCI.
+
+## Running Tests
+
+`util` contains various tests for payment proofs.
 
 ```
 cargo test --release
 ```
 
-from the root directory to see these results
-
-You should see the `client` make a connection to the `node` over the ABCI.
-
 ## How It Works
 
-We consider a model with one key simplification: there are no denominations to
-the currency. In other words, any and all transactions just send one single
-coin.
+Currently, protocash has no denominations. In other words, any single
+transaction just send *one* coin.
 
 ### The Data
 
-This is the shape of the data stored by all validators on the blockchain.
+This is a simplified shape of the data stored by all validators on the blockchain.
 
 ```rs
 type CoinID = u64; /// A coin identifier, often called the `pre_serial_number`.
@@ -78,21 +77,6 @@ struct Coin {
 
     /// Noise used when generating the coin commitment
     com_rnd: u64
-}
-
-/// A coin commitment. This is the data that our MerkleTree actually
-/// stores. This is really just a hash of the coin which takes as input
-///     - The `key`
-///     - The `pre_serial_number`
-///     - The `com_rnd`, for randomness
-struct Commitment<T> {
-    /// This is really the only important piece of data stored by the
-    /// commitment.
-    pub hash: u64,
-
-    /// This is just to keep track of what this is a commitment to. In this
-    /// case, just a coin.
-    _tx: PhantomData<T>
 }
 ```
 
@@ -146,10 +130,3 @@ in order for `B` to use this transaction.
 
 In order for `B` to find this coin in the Merkle Tree, they can simply compute
 the commitment from the information sent over by `A`.
-
-##### Inputs to the Proof
-
-Public inputs are:
-- `r`: The Merkle Tree root
-- `c`: The coin commitment owned by `A`
-- `s`: The serial number
