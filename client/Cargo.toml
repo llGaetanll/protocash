@@ -8,8 +8,7 @@ edition = "2021"
 [dependencies]
 util = { path = "../util" }
 
-prost = "0.12.4"
-
+prost = { workspace = true }
 tokio = { workspace = true }
 cometbft-proto = { workspace = true }
 bytes = { workspace = true }
